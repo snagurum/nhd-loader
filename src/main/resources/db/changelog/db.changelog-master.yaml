@@ -1,0 +1,6 @@
+databaseChangeLog:
+  # file: db/changelog/1.0.0/01_initial.sql
+  - includeAll:
+      path: db/changelog/1.0.0
+  - includeAll:
+      path: db/changelog/1.0.1
