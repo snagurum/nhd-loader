@@ -52,14 +52,14 @@ public class NhdApplication {
 	}
 
 
-//	@Bean
-//	@Order(2)
-//	public CommandLineRunner commandLineRunner1(ApplicationContext ctx) {
-//		return args -> {
-//			dspTickerRunner.run();
-//		};
-//	}
-//
+	@Bean
+	@Order(2)
+	public CommandLineRunner commandLineRunner1(ApplicationContext ctx) {
+		return args -> {
+			dspTickerRunner.runJob();
+		};
+	}
+
 
 //	@Bean
 //	@Order(3)

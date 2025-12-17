@@ -1,0 +1,9 @@
+jobName: "TICKER"
+httpRequests:
+  - pageName: "TICKER"
+    url: "https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv"
+    retrieveOutput: true
+
+
+
+

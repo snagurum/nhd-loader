@@ -67,4 +67,7 @@ public class AuditServiceImpl implements AuditService{
         return jobStatusRepo.getTodaysJobStatusByJobName(jobName);
     }
 
+    public Boolean isJobCompletedForToday(String jobName){
+        return jobStatusRepo.isJobCompletedForToday(jobName)>0;
+    }
 }

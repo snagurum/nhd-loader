@@ -67,10 +67,80 @@ public class BulkRunner {
         additionalHeaders.put("TE","trailers");
 
     }
+    
+    public void homePage(Stock ticker, CookieHandler cookies) throws IOException{
+        log.debug("homePage {}",ticker.getTicker());
+        Http.loadPage(homePageUrl, cookies);
+    }
+
+    public void tickerPage(Stock ticker, CookieHandler cookies) throws IOException{
+        log.debug("tickerPage {}",ticker.getTicker());
+        Http.loadPage(
+            tickerPageUrl + URLEncoder.encode(ticker.getTicker(),"UTF-8")
+            , cookies);
+    }
+
+    public HttpResponse tickerDetails(Stock ticker, CookieHandler cookies) throws IOException{
+        log.debug("tickerDetails {}",ticker.getTicker());
+        return Http.loadPage(
+            tickerDetailsPageUrl + URLEncoder.encode(ticker.getTicker(),"UTF-8")
+            , cookies);
+    }
+
+    
+    public HttpResponse tickerHistoricalPriceDetails(Stock ticker, CookieHandler cookies,String startDate, String endDate) throws IOException{
+        log.debug("tickerHistoricalPriceDetails {} start: url={}",ticker.getTicker(),                tickerHistoricalPriceDetailsUrl
+                .replaceFirst("__ticker__", ticker.getTicker())
+                .replaceFirst("__startDate__", startDate)
+                .replaceFirst("__endDate__", endDate));
+        HttpResponse httpResponse =Http.loadPage(
+                tickerHistoricalPriceDetailsUrl
+                        .replaceFirst("__ticker__", URLEncoder.encode(ticker.getTicker(),"UTF-8"))
+                        .replaceFirst("__series__", ticker.getSeries())
+                        .replaceFirst("__startDate__", startDate)
+                        .replaceFirst("__endDate__", endDate)
+                , cookies,additionalHeaders);
+        log.debug("tickerHistoricalPriceDetails {} response {} end",ticker.getTicker(),httpResponse);
+        return httpResponse;
+    }
 
 
-    public List<Map<String,String>> getDates(Stock ticker){
-        List<Map<String,String>> availableDates = new ArrayList<>();
+    public List<LoadBulkTickers> getYearlyBulkTickerData(Stock ticker,List<String> datesList){
+        try{
+            CookieHandler cookies = new CookieHandler() ;
+            List<LoadBulkTickers> loadBulkTickersList = new ArrayList<>();
+            homePage(ticker, cookies);
+            tickerPage(ticker, cookies);
+            AtomicReference<String> data = new AtomicReference<>();
+
+            datesList.forEach(item -> {
+                String startDate = item.split("__")[0];
+                String endDate = item.split("__")[1];
+                try {
+                    String dataString = tickerHistoricalPriceDetails(ticker, cookies,startDate,endDate).getResponseBody() ;
+                    if(dataString==null || dataString.isEmpty()) {
+                        data.set("Error");
+                        log.info("No data retrieved for {} with dates {} ,{}", ticker.getTicker(), startDate, endDate);
+                    }else
+                        loadBulkTickersList.addAll(this.loadObjectList( dataString));
+                } catch (IOException e) {
+                    data.set("Error");
+                    log.error("Exception occured for {} with dates {} ,{}", ticker.getTicker(), startDate, endDate,e);
+                }
+            });
+            if("Error".equals(data.get()))
+                return null;
+            else return loadBulkTickersList;
+        }catch(IOException e){
+            log.error("Exception occured for {} ", ticker.getTicker(),e);
+            return null;
+        }
+
+    }
+
+
+    public List<String> getDates(Stock ticker){
+        List<String> availableDates = new ArrayList<>();
         Calendar calendar = new GregorianCalendar();
         calendar.setTime(ticker.getDateOfListing());
         int startYear = calendar.get(Calendar.YEAR);
@@ -79,13 +149,21 @@ public class BulkRunner {
         int endYear = calendar.get(Calendar.YEAR);
 
         for(int i=startYear;i<=endYear;i++){
-            Map<String,String> datesMap = new HashMap<>();
-            datesMap.put("##startDate##","01-01-"+i);
-            datesMap.put("##endDate##","31-12-"+i);
-            datesMap.put("##series##",ticker.getSeries());
-            availableDates.add(datesMap);
+            availableDates.add("01-01-"+i+"__31-12-"+i);
         }
         return availableDates;
+    }
+
+
+
+    public List<LoadBulkTickers> getAllBulkTickerData(Stock ticker){
+        try{
+            List<String> datesList = this.getDates_old(ticker);
+            return getYearlyBulkTickerData(ticker, datesList);
+        }catch(Exception e){
+            return null;
+        }
+
     }
 
 
@@ -99,19 +177,20 @@ public class BulkRunner {
         }
 
         List<String> processedTickers = new ArrayList<>();
+
         int rounds = 0;
-        // boolean allFailed = false;
+        boolean allFailed = false;
         JobStatus audit = auditService.startJob(JobName.BSP_TICKER);
 
-        while( rounds < totalRounds && !remainingStocks.isEmpty()) {
+        while( rounds < totalRounds && !allFailed && !remainingStocks.isEmpty()) {
             log.info( "BSP Loader  Start: Round-{}, Remaining = {},  Retrieved = {}", rounds,remainingStocks.size(), processedTickers.size());
             AtomicInteger failureCount = new AtomicInteger();
             remainingStocks.parallelStream().forEach(item -> {
-                // JobStatus bspUnit = auditService.startJobWithComment(JobName.BSP_TICKER_UNIT, item.getTicker());
+                JobStatus bspUnit = auditService.startJobWithComment(JobName.BSP_TICKER_UNIT, item.getTicker());
                 List<LoadBulkTickers> bulkTickerList = getAllBulkTickerData(item);
                 if(bulkTickerList == null){
                     failureCount.getAndIncrement();
-                    // auditService.failJob(bspUnit);            
+                    auditService.failJob(bspUnit);            
                     log.info("Error occured for {}, no data retrieved bulkTickerList is empty", item.getTicker());
                 }else{
                     bulkTickerList.forEach(i -> i.setTicker(item.getTicker()));
@@ -120,10 +199,10 @@ public class BulkRunner {
                         stockService.saveAllLoadBulkTickers(bulkTickerList);
                         stockService.saveStock(item);
                         processedTickers.add(item.getTicker());
-                        // auditService.endJobWithSuccessFailureCount(bspUnit,bulkTickerList.size(),0);
+                        auditService.endJobWithSuccessFailureCount(bspUnit,bulkTickerList.size(),0);
                     }else {
                         failureCount.getAndIncrement();
-                        // auditService.endJobWithSuccessFailureCount(bspUnit,0,0);
+                        auditService.endJobWithSuccessFailureCount(bspUnit,0,0);
                     }
                 }
             });

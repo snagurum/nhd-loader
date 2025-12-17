@@ -7,7 +7,6 @@ import com.nhd.util.JobName;
 
 public interface AuditService {
 
-
     JobStatus startJob(JobName name);
 
     JobStatus startJobWithComment(JobName name,String comment);
@@ -23,5 +22,7 @@ public interface AuditService {
     List<JobStatus> getTodaysJobStatus();
 
     List<JobStatus> getTodaysJobStatusByJobName(String jobName);
+
+    Boolean isJobCompletedForToday(String jobNmae);
 
 }

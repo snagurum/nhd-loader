@@ -1,0 +1,31 @@
+---
+jobName: "DSP_TICKER"
+httpRequests:
+  - pageName: "homePage"
+    url: "https://www.nseindia.com"
+  - pageName: "tickerPage"
+    url: "https://www.nseindia.com/get-quotes/equity?symbol=##ticker##"
+  - pageName: "tickerDetails"
+    url: "https://www.nseindia.com/api/quote-equity?symbol=##ticker##"
+    retrieveOutput: true
+    outputKey: companyDetails
+  - pageName: "tickerTradeDetails"
+    url: "https://www.nseindia.com/api/quote-equity?symbol=##ticker##&section=trade_info"
+    retrieveOutput: true
+    outputKey: tradeDetails
+
+
+---
+jobName: "BSP_TICKER"
+httpRequests:
+  - pageName: "homePage"
+    url: "https://www.nseindia.com"
+  - pageName: "tickerPage"
+    url: "https://www.nseindia.com/get-quotes/equity?symbol=##ticker##"
+  - pageName: "tickerDetails"
+    url: "https://www.nseindia.com/api/quote-equity?symbol=##ticker##"
+  - pageName: "tickerTradeDetails"
+    url: "https://www.nseindia.com/api/historical/cm/equity?symbol=##ticker##&series=[%22##series##%22]&from=##startDate##&to=##endDate##&csv=true"
+    retrieveOutput: true
+    looping: true
+collate: true

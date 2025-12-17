@@ -1,6 +1,7 @@
 package com.nhd.batch.runner;
 
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -17,7 +18,9 @@ import com.nhd.models.JobStatus;
 import com.nhd.models.LoadTickers;
 import com.nhd.service.AuditService;
 import com.nhd.service.StockService;
+import com.nhd.util.Constants;
 import com.nhd.util.JobName;
+import com.nhd.util.http.Http;
 import com.nhd.util.http.HttpExecutor;
 
 
@@ -32,36 +35,26 @@ public class TickerRunner {
     @Autowired
     private AuditService auditService ;
 
-    private HttpExecutor processHttpExecutor(String requestYaml){
-        HttpExecutor httpExecutor = new HttpExecutor(requestYaml);
-        httpExecutor.process();
-        return httpExecutor;
-    }
+	public String getTickers() throws IOException {
+        return Http.loadPage(Constants.NSE_TICKERS_URL, null).getResponseBody();
+	}
 
-    @Scheduled( cron = "#{${loader.ticker.scheduler.cron}}")
     public void runJob(){
-        JobStatus audit = null;
         try{
 
             if(auditService.isJobCompletedForToday(String.valueOf(JobName.TICKER))) {
                 return;
             }
             
-            audit = auditService.startJob(JobName.TICKER);
-            log.info("Job {} has started ....",audit.getName());
-            HttpExecutor httpExecutor = processHttpExecutor("com/nhd/batch/runner/ticker.yml");
-            if(httpExecutor.isJobCompleted()){
-                List<LoadTickers> tickers = this.loadObjectList(httpExecutor.getOutput().get("output"));
-                stockService.saveAllLoadTickers(tickers );
-                log.info("loaded tickers count = {}", tickers.size());
-                audit.setSuccessCount(tickers.size());
-                auditService.endJob(audit);
-            }else{
-                auditService.failJob(audit);    
-            }
+            JobStatus audit = auditService.startJob(JobName.TICKER);
+            log.info("Job {} has already been started ....",audit);
+            List<LoadTickers> tickers = this.loadObjectList(getTickers());
+            stockService.saveAllLoadTickers(tickers );
+            log.info("loaded tickers count = {}", tickers.size());
+            audit.setSuccessCount(tickers.size());
+            auditService.endJob(audit);
         }catch (Exception e){
             log.error(e.getMessage(),e);
-            auditService.failJob(audit);
         }
     }
 
