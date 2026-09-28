@@ -3,18 +3,19 @@ package com.nhd.service;
 import java.sql.Timestamp;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.nhd.models.JobStatus;
 import com.nhd.service.repo.JobStatusRepository;
 import com.nhd.util.JobName;
 
+import lombok.AllArgsConstructor;
+
 
 @Service
+@AllArgsConstructor
 public class AuditServiceImpl implements AuditService{
 
-    @Autowired
     JobStatusRepository jobStatusRepo;
 
     public JobStatus startJob(JobName jobName ) {

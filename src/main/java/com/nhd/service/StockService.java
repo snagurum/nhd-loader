@@ -3,9 +3,12 @@ package com.nhd.service;
 import java.sql.Date;
 import java.util.List;
 
-import com.nhd.models.LoadBulkTickers;
-import com.nhd.models.LoadDspTickers;
-import com.nhd.models.LoadTickers;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import com.nhd.models.LoadBspTicker;
+import com.nhd.models.LoadDspTicker;
+import com.nhd.models.LoadTicker;
 import com.nhd.models.Stock;
 
 
@@ -21,13 +24,17 @@ public interface StockService{
 
         Stock saveStock(Stock ticker);
 
-        void saveAllLoadTickers(List<LoadTickers> tickers);
+        void saveAllLoadTickers(List<LoadTicker> tickers);
 
-        void saveAllLoadDspTickers(List<LoadDspTickers> tickers);
+        void saveAllLoadDspTickers(List<LoadDspTicker> tickers);
 
-        void saveAllLoadBulkTickers(List<LoadBulkTickers> tickers);
+        void saveAllLoadBspTickers(List<LoadBspTicker> tickers);
 
-        List<LoadDspTickers> getDspTickers(String ticker, Date date);
+        List<LoadDspTicker> getDspTickers(String ticker, Date date);
 
-        List<LoadBulkTickers> getBspTickers(String ticker, Date date);
+        List<LoadBspTicker> getBspTickers(String ticker, Date date);
+
+        public Page<LoadDspTicker> getDspsByPriceDate(String date, Pageable pageable);
+
+        public Page<LoadBspTicker> getBspsByPriceDate(String date, Pageable pageable);
 }

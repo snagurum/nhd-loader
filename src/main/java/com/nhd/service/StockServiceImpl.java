@@ -5,35 +5,36 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
 
-import com.nhd.models.LoadBulkTickers;
-import com.nhd.models.LoadDspTickers;
-import com.nhd.models.LoadTickers;
+import com.nhd.models.LoadBspTicker;
+import com.nhd.models.LoadDspTicker;
+import com.nhd.models.LoadTicker;
 import com.nhd.models.Stock;
-import com.nhd.service.repo.LoadBulkTickersRepository;
-import com.nhd.service.repo.LoadDspTickersRepository;
-import com.nhd.service.repo.LoadTickersRepository;
+import com.nhd.service.repo.LoadBspTickerRepository;
+import com.nhd.service.repo.LoadDspTickerRepository;
+import com.nhd.service.repo.LoadTickerRepository;
 import com.nhd.service.repo.StockRepository;
 
+import lombok.AllArgsConstructor;
+
 @Service
+@AllArgsConstructor
 public class StockServiceImpl implements StockService {
 
     private static final Logger log = LoggerFactory.getLogger(StockService.class);
 
-    @Autowired
-    LoadTickersRepository loadTickerRepo;
+    LoadTickerRepository loadTickerRepo;
 
-    @Autowired
-    LoadDspTickersRepository loadDspRepo;
+    LoadDspTickerRepository loadDspRepo;
 
-    @Autowired
     StockRepository stockRepo;
 
-    @Autowired
-    LoadBulkTickersRepository loadBulkTickersRepo;
+    LoadBspTickerRepository loadBspTickersRepo;
 
 
     public List<Stock> getActiveTickers(){
@@ -46,7 +47,7 @@ public class StockServiceImpl implements StockService {
 
 
     public List<Stock> noHistoryStocksWithLimit(int rowsCount){
-        return stockRepo.noHistoryStocksWithLimit(rowsCount);
+        return stockRepo.noHistoryStocksWithLimit(Limit.of(rowsCount));
     }
 
     public List<Stock> getStocks(){ return Streamable.of(stockRepo.findAll()).toList();}
@@ -55,7 +56,7 @@ public class StockServiceImpl implements StockService {
         return stockRepo.save(stock);
     }
 
-    public void saveAllLoadTickers(List<LoadTickers> tickers){
+    public void saveAllLoadTickers(List<LoadTicker> tickers){
 
         log.info("truncating load_tickers table");
         loadTickerRepo.truncateTable();
@@ -67,27 +68,35 @@ public class StockServiceImpl implements StockService {
         loadTickerRepo.addNewStocks();
     }
 
-    public void saveAllLoadDspTickers(List<LoadDspTickers> tickers) {
+    public void saveAllLoadDspTickers(List<LoadDspTicker> tickers) {
         loadDspRepo.saveAll(tickers);
     }
 
-    public List<LoadDspTickers> getDspTickers(String ticker, Date date){
+    public List<LoadDspTicker> getDspTickers(String ticker, Date date){
         if(date == null){
-            return loadDspRepo.findBYTicker(ticker);
+            return loadDspRepo.findByTicker(ticker);
         } else {
-            return loadDspRepo.findBYTickerFromDate(ticker, date);
+            return loadDspRepo.findByTickerFromDate(ticker, date);
         }
     }
 
-    public List<LoadBulkTickers> getBspTickers(String ticker, Date date){
+    public List<LoadBspTicker> getBspTickers(String ticker, Date date){
         if(date == null){
-            return loadBulkTickersRepo.findBYTicker(ticker);
+            return loadBspTickersRepo.findByTicker(ticker);
         } else {
-            return loadBulkTickersRepo.findBYTickerFromDate(ticker, date);
+            return loadBspTickersRepo.findByTickerFromDate(ticker, date);
         }
     }
 
-    public void saveAllLoadBulkTickers(List<LoadBulkTickers> tickers){
-        loadBulkTickersRepo.saveAll(tickers);
+    public void saveAllLoadBspTickers(List<LoadBspTicker> tickers){
+        loadBspTickersRepo.saveAll(tickers);
+    }
+
+    public Page<LoadBspTicker> getBspsByPriceDate(String date, Pageable pageable) {
+        return loadBspTickersRepo.findByPriceDate(date, pageable);
+    }
+
+    public Page<LoadDspTicker> getDspsByPriceDate(String date, Pageable pageable) {
+        return loadDspRepo.findByPriceDate(date, pageable);
     }
 }

@@ -1,0 +1,9 @@
+
+name: ticker
+description: active tickers prices
+timeout: 10
+pages:
+  - pageName: tickers
+    url: https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv
+    validationStatusCode: 200
+    persistantData: true

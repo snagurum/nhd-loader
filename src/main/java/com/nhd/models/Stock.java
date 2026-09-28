@@ -1,16 +1,20 @@
 package com.nhd.models;
 
 import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
-
+import jakarta.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Table;
 import java.sql.Date;
 
 @Data
+@Entity
 @Table(name = "stocks", schema = "lt")
 public class Stock {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String ticker;
@@ -22,6 +26,8 @@ public class Stock {
     private Date dateOfListing;
 
     private boolean historyLoaded;
+
+    private boolean active;
 
 
 
