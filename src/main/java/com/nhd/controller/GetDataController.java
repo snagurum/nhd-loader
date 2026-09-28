@@ -41,6 +41,7 @@ public class GetDataController {
 
     @GetMapping("/dspTicker")
     public List<LoadDspTickers> getDspTicker(@RequestParam String ticker, @RequestParam Optional<String> fromDate) {
+        System.out.println("running dspTicker Test "+ ticker);
         Date date = null;
         if(fromDate.isPresent())
             date = Date.valueOf(fromDate.get());

@@ -13,10 +13,10 @@ import java.util.List;
 @Repository
 public interface LoadDspTickersRepository extends CrudRepository<LoadDspTickers, Long>{
 
-    @Query("select s.* from lt.load_dsp_ticker s where s.ticker = :ticker")
+    @Query("select s.* from lt.load_dsp_tickers s where s.ticker = :ticker")
     List<LoadDspTickers> findBYTicker(@Param("ticker") String ticker);
 
-    @Query("select s.* from lt.load_dsp_ticker s where s.ticker = :ticker and s.price_date < :fromDate")
+    @Query("select s.* from lt.load_dsp_tickers s where s.ticker = :ticker and s.price_date < :fromDate")
     List<LoadDspTickers> findBYTickerFromDate(@Param("ticker") String ticker,@Param("fromDate") Date fromDate);
 
 }
