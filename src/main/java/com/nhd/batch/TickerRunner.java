@@ -1,0 +1,92 @@
+package com.nhd.batch;
+
+
+import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.nhd.models.JobStatus;
+import com.nhd.models.LoadTickers;
+import com.nhd.service.AuditService;
+import com.nhd.service.StockService;
+import com.nhd.util.JobName;
+import com.web.crawler.Bot;
+import com.web.crawler.BotUtil;
+import com.web.crawler.PageLoadException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.List;
+
+import org.yaml.snakeyaml.constructor.Constructor;
+import org.yaml.snakeyaml.LoaderOptions;
+import org.yaml.snakeyaml.Yaml;
+
+import org.apache.commons.lang3.SerializationUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+public class TickerRunner {
+    
+    private static final Logger log = LoggerFactory.getLogger(TickerRunner.class);
+
+    @Autowired
+    private StockService stockService ;
+
+    @Autowired
+    private AuditService auditService ;
+
+    private static final Bot TICKER_BOT;
+    static {
+        
+        Yaml yaml = new Yaml(new Constructor(Bot.class, new LoaderOptions()));
+        InputStream inputStream = TickerRunner.class.getClassLoader().getResourceAsStream("yamlConfigs/ticker.yaml");
+         TICKER_BOT = yaml.load(inputStream);
+        System.out.println(TICKER_BOT);       
+    }
+
+    public TickerRunner(){ }
+    
+    public void runJob(){
+        System.out.println("-------------------------------------");
+        JobStatus audit = auditService.startJob(JobName.TICKER);
+
+        try {
+            Bot tickerBot = SerializationUtils.clone(TICKER_BOT);
+            BotUtil botUtil = new BotUtil(tickerBot);
+            String data = botUtil.process();
+            List<LoadTickers> tickers = this.loadObjectList(data);
+            stockService.saveAllLoadTickers(tickers );
+            log.info("loaded tickers count = {}", tickers.size());
+            audit.setSuccessCount(tickers.size());
+            auditService.endJob(audit);
+        } catch (PageLoadException | IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public List<LoadTickers> loadObjectList(String dataString) {
+        try {
+            CsvMapper csvMapper = new CsvMapper();
+            CsvSchema schema = CsvSchema.builder()
+                .addColumn("SYMBOL")
+                .addColumn("NAME OF COMPANY")
+                .addColumn("SERIES")
+                .addColumn("DATE OF LISTING")
+                .addColumn("PAID UP VALUE")
+                .addColumn("MARKET LOT")
+                .addColumn("ISIN NUMBER")
+                .addColumn("FACE VALUE")
+                .build()
+                .withHeader();
+            MappingIterator<LoadTickers> it = csvMapper.readerFor(LoadTickers.class).with(schema).readValues(dataString);
+            return it.readAll();
+        } catch (Exception e) {
+            log.error("Error occurred while loading object list from file {}", dataString, e);
+            return Collections.emptyList();
+        }
+    }
+
+}

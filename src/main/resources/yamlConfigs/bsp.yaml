@@ -1,0 +1,18 @@
+name: dsp
+description: daily stock prices
+timeout: 10
+pages:
+  - pageName: landingPage
+    url: https://www.nseindia.com
+    referer: https://www.nseindia.com
+    validationStatusCode: 403
+  - pageName: SearchPage
+    url: https://www.nseindia.com/api/NextApi/globalSearch/equity?symbol=$gParam1$
+    referer: https://www.nseindia.com
+    validationStatusCode: 200
+  - pageName: HistoricalPage
+    url: https://www.nseindia.com/api/NextApi/apiClient/GetQuoteApi?functionName=getHistoricalTradeData&symbol=$gParam1$&series=EQ&fromDate=$lParam1$&toDate=$1Param2$&csv=true
+    referer: https://www.nseindia.com
+    validationStatusCode: 200
+    
+
