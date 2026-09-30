@@ -1,6 +1,6 @@
 package com.nhd.service.repo;
 
-import com.nhd.models.LoadBulkTickers;
+import com.nhd.models.LoadBspTicker;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -11,13 +11,13 @@ import java.util.List;
 
 
 @Repository
-public interface LoadBulkTickersRepository extends CrudRepository<LoadBulkTickers, Long> {
+public interface LoadBspTickerRepository extends CrudRepository<LoadBspTicker, Long> {
 
     @Query("select s.* from lt.load_bulk_ticker s where s.ticker = :ticker")
-    List<LoadBulkTickers> findBYTicker(@Param("ticker") String ticker);
+    List<LoadBspTicker> findBYTicker(@Param("ticker") String ticker);
 
     @Query("select s.* from lt.load_bulk_ticker s where s.ticker = :ticker and s.price_date < :fromDate")
-    List<LoadBulkTickers> findBYTickerFromDate(@Param("ticker") String ticker,@Param("fromDate") Date fromDate);
+    List<LoadBspTicker> findBYTickerFromDate(@Param("ticker") String ticker,@Param("fromDate") Date fromDate);
 
 }
 

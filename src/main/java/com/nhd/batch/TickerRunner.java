@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.nhd.models.JobStatus;
-import com.nhd.models.LoadTickers;
+import com.nhd.models.LoadTicker;
 import com.nhd.service.AuditService;
 import com.nhd.service.StockService;
 import com.nhd.util.JobName;
@@ -26,7 +26,10 @@ import org.apache.commons.lang3.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
+@Component 
 public class TickerRunner {
     
     private static final Logger log = LoggerFactory.getLogger(TickerRunner.class);
@@ -46,17 +49,17 @@ public class TickerRunner {
         System.out.println(TICKER_BOT);       
     }
 
-    public TickerRunner(){ }
-    
+
+    @Scheduled( cron = "#{${loader.ticker.scheduler.cron}}")
     public void runJob(){
-        System.out.println("-------------------------------------");
+        log.trace("method tickerRunner.runJob start");
         JobStatus audit = auditService.startJob(JobName.TICKER);
 
         try {
             Bot tickerBot = SerializationUtils.clone(TICKER_BOT);
             BotUtil botUtil = new BotUtil(tickerBot);
             String data = botUtil.process();
-            List<LoadTickers> tickers = this.loadObjectList(data);
+            List<LoadTicker> tickers = this.loadObjectList(data);
             stockService.saveAllLoadTickers(tickers );
             log.info("loaded tickers count = {}", tickers.size());
             audit.setSuccessCount(tickers.size());
@@ -64,10 +67,11 @@ public class TickerRunner {
         } catch (PageLoadException | IOException | InterruptedException e) {
             e.printStackTrace();
         }
+        log.trace("method tickerRunner.runJob end");
     }
 
 
-    public List<LoadTickers> loadObjectList(String dataString) {
+    public List<LoadTicker> loadObjectList(String dataString) {
         try {
             CsvMapper csvMapper = new CsvMapper();
             CsvSchema schema = CsvSchema.builder()
@@ -81,7 +85,7 @@ public class TickerRunner {
                 .addColumn("FACE VALUE")
                 .build()
                 .withHeader();
-            MappingIterator<LoadTickers> it = csvMapper.readerFor(LoadTickers.class).with(schema).readValues(dataString);
+            MappingIterator<LoadTicker> it = csvMapper.readerFor(LoadTicker.class).with(schema).readValues(dataString);
             return it.readAll();
         } catch (Exception e) {
             log.error("Error occurred while loading object list from file {}", dataString, e);

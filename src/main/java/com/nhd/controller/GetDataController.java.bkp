@@ -1,8 +1,8 @@
 package com.nhd.controller;
 
-import com.nhd.batch.runner.BulkRunner;
+// import com.nhd.batch.runner.BulkRunner;
 import com.nhd.models.LoadBulkTickers;
-import com.nhd.models.LoadDspTickers;
+import com.nhd.models.LoadDspTicker;
 import com.nhd.models.Stock;
 import com.nhd.service.StockService;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ public class GetDataController {
     }
 
     @GetMapping("/dspTicker")
-    public List<LoadDspTickers> getDspTicker(@RequestParam String ticker, @RequestParam Optional<String> fromDate) {
+    public List<LoadDspTicker> getDspTicker(@RequestParam String ticker, @RequestParam Optional<String> fromDate) {
         System.out.println("running dspTicker Test "+ ticker);
         Date date = null;
         if(fromDate.isPresent())

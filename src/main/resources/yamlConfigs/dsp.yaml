@@ -9,9 +9,13 @@ pages:
   - pageName: SearchPage
     url: https://www.nseindia.com/api/NextApi/globalSearch/equity?symbol=$gParam1$
     referer: https://www.nseindia.com
+    pageParams:
+     - name: $gParam2$
+       startString: "\"series\":\""
+       endString: "\""
     validationStatusCode: 200
   - pageName: DetailsPage
-    url: https://www.nseindia.com/api/NextApi/apiClient/GetQuoteApi?functionName=getSymbolData&marketType=N&series=EQ&symbol=$gParam1$
+    url: https://www.nseindia.com/api/NextApi/apiClient/GetQuoteApi?functionName=getSymbolData&marketType=N&series=$gParam2$&symbol=$gParam1$
     referer: https://www.nseindia.com
     validationStatusCode: 200
     

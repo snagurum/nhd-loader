@@ -1,6 +1,7 @@
 package com.web.crawler;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
 import lombok.Data;
@@ -22,5 +23,6 @@ public class Page  implements Serializable{
     private Boolean collate = false;
     private String referer;
     private Map<String,String> params;
+    private List<PageParam> pageParams;
        
 }

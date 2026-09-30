@@ -15,18 +15,21 @@ public class BotUtil {
 
     public BotUtil(Bot bot, Map<String,String> gParam){
         this.bot = bot;
-        this.gParam = gParam;
+        this.gParam = gParam ;
     }
     
     public String process() throws PageLoadException, IOException, InterruptedException{
         HttpClient client = HttpUtil.getHttpClient();
-        String data = null;
+        String responseData = "";
+        String data = "";
         for( Page eachPage: this.bot.getPages()){
             HttpUtil httpUtil = new HttpUtil(eachPage,gParam);
             data = httpUtil.process(client);
+            if (eachPage.getCollate())
+                responseData = responseData + data;
             BotUtil.sleepQuietly(1000);
         }
-        return data;
+        return "".equals(responseData)? data: responseData;
     }
 
     public static void sleepQuietly(int i) {

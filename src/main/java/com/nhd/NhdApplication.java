@@ -11,9 +11,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import com.nhd.batch.runner.BulkRunner;
-import com.nhd.batch.runner.DspRunner;
-import com.nhd.batch.runner.TickerRunner;
+// import com.nhd.batch.BulkRunner;
+import com.nhd.batch.DspRunner;
+import com.nhd.batch.TickerRunner;
 
 @EnableScheduling
 @SpringBootApplication
@@ -26,8 +26,8 @@ public class NhdApplication {
 	@Autowired
 	DspRunner dspTickerRunner;
 
-	@Autowired
-	BulkRunner bulkTickerRunner;
+	// @Autowired
+	// BulkRunner bulkTickerRunner;
 
 	public static void main(String[] args) {
 		SpringApplication.run(NhdApplication.class, args);

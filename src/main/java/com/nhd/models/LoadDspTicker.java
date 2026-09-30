@@ -8,9 +8,9 @@ import java.sql.Date;
 
 @Data
 @Table(name = "load_dsp_tickers", schema = "lt")
-public class LoadDspTickers {
+public class LoadDspTicker {
 
-    public LoadDspTickers(){
+    public LoadDspTicker(){
         this.priceDate = new Date(System.currentTimeMillis());
     }
 

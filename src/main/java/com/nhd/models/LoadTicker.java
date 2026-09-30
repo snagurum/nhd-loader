@@ -9,7 +9,7 @@ import lombok.Data;
 
 @Data
 @Table(name = "load_tickers", schema = "lt")
-public class LoadTickers {
+public class LoadTicker {
 
     @Id
     private Long id;

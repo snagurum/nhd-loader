@@ -9,13 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
 
-import com.nhd.models.LoadBulkTickers;
-import com.nhd.models.LoadDspTickers;
-import com.nhd.models.LoadTickers;
+import com.nhd.models.LoadBspTicker;
+import com.nhd.models.LoadDspTicker;
+import com.nhd.models.LoadTicker;
 import com.nhd.models.Stock;
-import com.nhd.service.repo.LoadBulkTickersRepository;
-import com.nhd.service.repo.LoadDspTickersRepository;
-import com.nhd.service.repo.LoadTickersRepository;
+import com.nhd.service.repo.LoadBspTickerRepository;
+import com.nhd.service.repo.LoadDspTickerRepository;
+import com.nhd.service.repo.LoadTickerRepository;
 import com.nhd.service.repo.StockRepository;
 
 @Service
@@ -24,16 +24,16 @@ public class StockServiceImpl implements StockService {
     private static final Logger log = LoggerFactory.getLogger(StockService.class);
 
     @Autowired
-    LoadTickersRepository loadTickerRepo;
+    LoadTickerRepository loadTickerRepo;
 
     @Autowired
-    LoadDspTickersRepository loadDspRepo;
+    LoadDspTickerRepository loadDspRepo;
 
     @Autowired
     StockRepository stockRepo;
 
     @Autowired
-    LoadBulkTickersRepository loadBulkTickersRepo;
+    LoadBspTickerRepository loadBspTickersRepo;
 
 
     public List<Stock> getActiveTickers(){
@@ -55,7 +55,7 @@ public class StockServiceImpl implements StockService {
         return stockRepo.save(stock);
     }
 
-    public void saveAllLoadTickers(List<LoadTickers> tickers){
+    public void saveAllLoadTickers(List<LoadTicker> tickers){
 
         log.info("truncating load_tickers table");
         loadTickerRepo.truncateTable();
@@ -67,11 +67,11 @@ public class StockServiceImpl implements StockService {
         loadTickerRepo.addNewStocks();
     }
 
-    public void saveAllLoadDspTickers(List<LoadDspTickers> tickers) {
+    public void saveAllLoadDspTickers(List<LoadDspTicker> tickers) {
         loadDspRepo.saveAll(tickers);
     }
 
-    public List<LoadDspTickers> getDspTickers(String ticker, Date date){
+    public List<LoadDspTicker> getDspTickers(String ticker, Date date){
         if(date == null){
             return loadDspRepo.findBYTicker(ticker);
         } else {
@@ -79,15 +79,15 @@ public class StockServiceImpl implements StockService {
         }
     }
 
-    public List<LoadBulkTickers> getBspTickers(String ticker, Date date){
+    public List<LoadBspTicker> getBspTickers(String ticker, Date date){
         if(date == null){
-            return loadBulkTickersRepo.findBYTicker(ticker);
+            return loadBspTickersRepo.findBYTicker(ticker);
         } else {
-            return loadBulkTickersRepo.findBYTickerFromDate(ticker, date);
+            return loadBspTickersRepo.findBYTickerFromDate(ticker, date);
         }
     }
 
-    public void saveAllLoadBulkTickers(List<LoadBulkTickers> tickers){
-        loadBulkTickersRepo.saveAll(tickers);
+    public void saveAllLoadBspTickers(List<LoadBspTicker> tickers){
+        loadBspTickersRepo.saveAll(tickers);
     }
 }

@@ -5,10 +5,10 @@ import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import com.nhd.models.LoadTickers;
+import com.nhd.models.LoadTicker;
 
 @Repository
-    public interface LoadTickersRepository extends CrudRepository<LoadTickers, Long> {
+    public interface LoadTickerRepository extends CrudRepository<LoadTicker, Long> {
 
         @Modifying
         @Query("truncate table  lt.load_tickers")

@@ -2,7 +2,7 @@ package com.nhd.batch;
 
 
 import com.nhd.models.JobStatus;
-import com.nhd.models.LoadDspTickers;
+import com.nhd.models.LoadDspTicker;
 import com.nhd.models.Stock;
 import com.nhd.service.AuditService;
 import com.nhd.service.StockService;
@@ -25,8 +25,11 @@ import org.yaml.snakeyaml.Yaml;
 import org.apache.commons.lang3.SerializationUtils;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
+@Component 
 public class DspRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DspRunner.class);
@@ -50,6 +53,7 @@ public class DspRunner {
     
     public DspRunner(){ }
     
+    // @Scheduled(cron="#{${loader.dsp_ticker.scheduler.cron}}")
     public void runJob(){
  
         if (!auditService.getTodaysJobStatusByJobName(String.valueOf(JobName.DSP_TICKER)).isEmpty()) return;        
@@ -60,20 +64,13 @@ public class DspRunner {
         log.info("DSP job started: {}", audit);
 
         List<Stock> stocks = stockService.getActiveTickers();
-        Map<String, LoadDspTickers> processed = new HashMap<>();
+        Map<String, LoadDspTicker> processed = new HashMap<>();
 
         for (Stock stock : stocks) {
             long tickerStart = System.currentTimeMillis();
 
             try {
-                Bot dspBot = SerializationUtils.clone(DSP_BOT);
-                Map<String,String> gParam = Map.of("$gParam1$",stock.getTicker());
-                BotUtil botUtil = new BotUtil(dspBot, gParam);
-                String data = botUtil.process();
-
-                LoadDspTickers loadDspTickers = new LoadDspTickers();
-                loadDspTickers.setTicker(stock.getTicker());
-                loadDspTickers.setCompanyDetails(data);                
+                LoadDspTicker loadDspTickers = runJobTemp(stock.getTicker());
                 processed.put(stock.getTicker(), loadDspTickers);
                 log.info("DSP ticker={} took {} ms (#{})",stock.getTicker(),(System.currentTimeMillis() - tickerStart),++count);
 
@@ -96,6 +93,16 @@ public class DspRunner {
     }
 
 
+    private LoadDspTicker runJobTemp(String ticker) throws PageLoadException, IOException, InterruptedException{
+                Bot dspBot = SerializationUtils.clone(DSP_BOT);
+                Map<String, String> gParam = new HashMap<>(Map.of("$gParam1$", ticker));
+                BotUtil botUtil = new BotUtil(dspBot, gParam);
+                String data = botUtil.process();
 
+                LoadDspTicker loadDspTickers = new LoadDspTicker();
+                loadDspTickers.setTicker(ticker);
+                loadDspTickers.setCompanyDetails(data); 
+                return loadDspTickers;
+    }
 
 }

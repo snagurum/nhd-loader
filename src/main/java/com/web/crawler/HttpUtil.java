@@ -24,28 +24,29 @@ public class HttpUtil {
 		"Accept-Language", "en-US,en;q=0.9",
 		"Accept-Encoding", "identity"
 	);
+
+
 	private Page page;
 	private Map<String, String> globalParams;
-
 	private String responseData;
 	Integer responseStatusCode;
 
-
 	public static HttpClient getHttpClient(){
-			CookieManager cookieManager = new CookieManager();
-            cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
+		CookieManager cookieManager = new CookieManager();
+		cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
 
-			HttpClient client = HttpClient.newBuilder()
-                    .cookieHandler(cookieManager)
-                    .connectTimeout(Duration.ofSeconds(10))
-                    .build();
-					return client;
+		HttpClient client = HttpClient.newBuilder()
+				.cookieHandler(cookieManager)
+				.connectTimeout(Duration.ofSeconds(10))
+				.build();
+				return client;
 	}
 	
 	
 	public HttpUtil(Page page, Map<String,String> gParams){
 		this.page = page;
 		this.globalParams = gParams;
+		this.responseData ="";
 	}
 	
 	
@@ -58,18 +59,19 @@ public class HttpUtil {
 		HttpRequest httpRequest = builder.build();
 
 		HttpResponse<String> httpResponse = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-		if(this.page.getCollate())
-			this.responseData = this.responseData + httpResponse.body();
-		else this.responseData = httpResponse.body();
+		this.responseData = httpResponse.body();
 		this.responseStatusCode = httpResponse.statusCode();
 
 		doValidation();
+		doLoadParams();
 		return this.responseData;
 	}
 
 	private String addParam(){
 		String url = this.page.getUrl();
 		if(this.globalParams !=null){
+			System.out.println("URL : "+url);
+			System.out.println("this.globalParams = "+this.globalParams);
 			for (String key  : this.globalParams.keySet()) {
 				url = url.replace(key,this.globalParams.get(key));
 			}
@@ -95,11 +97,7 @@ public class HttpUtil {
 	}
 
 	private void doValidation(){
-		System.out.println("\n\n\n\n");
-		System.out.println(this.page.getPageName() + " Response Code: " + this.responseStatusCode);
-		System.out.println(this.page.getPageName() + " Response Data: " + this.responseData);
-
-				if(null!=this.page.getValidationString() && this.responseData.indexOf(this.page.getValidationString())>-1){
+		if(null!=this.page.getValidationString() && this.responseData.indexOf(this.page.getValidationString())>-1){
 			throw new PageLoadException("PageLoad String validation Failure");
 		}
 
@@ -107,5 +105,29 @@ public class HttpUtil {
 			throw new PageLoadException("PageLoad statusCode validation Failure");
 		}
 	}
+
+	private void doLoadParams(){		
+		if(this.page.getPageParams()!=null)
+		for (PageParam pageParam : this.page.getPageParams()) {
+			this.globalParams.put(pageParam.getName(),getSubstringBetween(new String(this.responseData), pageParam.getStartString(), pageParam.getEndString()));
+			System.out.println("this.globalParams = " + this.globalParams);
+		}
+	}
+
+	public static String getSubstringBetween(String text, String startStr, String endStr) {
+        if (text == null || startStr == null || endStr == null) 
+			throw new ParamNotFoundException("Inputs (text, startStr, endStr) cannot be null.");
+        
+		int startIdx = text.indexOf(startStr);
+        if (startIdx == -1) 
+			throw new ParamNotFoundException("The start string '" + startStr + "' was not found in the text.");
+        
+		text = text.substring(startIdx + startStr.length());
+		int endIdx = text.indexOf(endStr);
+        if (endIdx == -1) 
+			throw new ParamNotFoundException("The end string '" + endStr + "' was not found in the remaining text.");
+        
+        return text.substring(0, endIdx);
+    }
  
 }
