@@ -18,4 +18,5 @@ pages:
     url: https://www.nseindia.com/api/NextApi/apiClient/GetQuoteApi?functionName=getSymbolData&marketType=N&series=$gParam2$&symbol=$gParam1$
     referer: https://www.nseindia.com
     validationStatusCode: 200
+    persistantData: true
     

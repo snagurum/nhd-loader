@@ -1,7 +1,9 @@
 package com.nhd.batch;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhd.models.JobStatus;
+import com.nhd.models.LoadBspTicker;
 import com.nhd.models.LoadDspTicker;
 import com.nhd.models.Stock;
 import com.nhd.service.AuditService;
@@ -9,6 +11,7 @@ import com.nhd.service.StockService;
 import com.nhd.util.JobName;
 import com.web.crawler.Bot;
 import com.web.crawler.BotUtil;
+import com.web.crawler.Page;
 import com.web.crawler.PageLoadException;
 
 import java.io.IOException;
@@ -36,14 +39,12 @@ public class DspRunner {
 
     private static final Bot DSP_BOT;
     
-    static {
-        
+    static {        
         Yaml yaml = new Yaml(new Constructor(Bot.class, new LoaderOptions()));
         InputStream inputStream = DspRunner.class.getClassLoader().getResourceAsStream("yamlConfigs/dsp.yaml");
          DSP_BOT = yaml.load(inputStream);
-        System.out.println(DSP_BOT);       
+        log.info(DSP_BOT.toString());       
     }
-
     
     @Autowired
     private StockService stockService;
@@ -51,9 +52,8 @@ public class DspRunner {
     @Autowired
     private AuditService auditService;
     
-    public DspRunner(){ }
     
-    // @Scheduled(cron="#{${loader.dsp_ticker.scheduler.cron}}")
+    @Scheduled(cron="#{${loader.dsp_ticker.scheduler.cron}}")
     public void runJob(){
  
         if (!auditService.getTodaysJobStatusByJobName(String.valueOf(JobName.DSP_TICKER)).isEmpty()) return;        
@@ -70,8 +70,9 @@ public class DspRunner {
             long tickerStart = System.currentTimeMillis();
 
             try {
-                LoadDspTicker loadDspTickers = runJobTemp(stock.getTicker());
-                processed.put(stock.getTicker(), loadDspTickers);
+                Bot bot = runJob0(stock);
+                List<LoadDspTicker> loadDspTickers = buildObjects(bot, stock);
+                processed.put(stock.getTicker(), loadDspTickers.get(0));
                 log.info("DSP ticker={} took {} ms (#{})",stock.getTicker(),(System.currentTimeMillis() - tickerStart),++count);
 
                 BotUtil.sleepQuietly(1000);
@@ -93,16 +94,26 @@ public class DspRunner {
     }
 
 
-    private LoadDspTicker runJobTemp(String ticker) throws PageLoadException, IOException, InterruptedException{
+    private Bot runJob0(Stock stock) throws PageLoadException, IOException, InterruptedException{
                 Bot dspBot = SerializationUtils.clone(DSP_BOT);
-                Map<String, String> gParam = new HashMap<>(Map.of("$gParam1$", ticker));
+                Map<String, String> gParam = new HashMap<>(Map.of("$gParam1$", stock.getTicker()));
                 BotUtil botUtil = new BotUtil(dspBot, gParam);
-                String data = botUtil.process();
-
-                LoadDspTicker loadDspTickers = new LoadDspTicker();
-                loadDspTickers.setTicker(ticker);
-                loadDspTickers.setCompanyDetails(data); 
-                return loadDspTickers;
+                botUtil.process();
+                return dspBot;
     }
 
+    public List<LoadDspTicker> buildObjects(Bot bot,Stock stock) throws IOException {
+        List<LoadDspTicker> allLoadDspTickers = new ArrayList<>();
+
+        for (Page page : bot.getPages()) {
+            if(page.getPersistantData()){
+                LoadDspTicker loadDspTickers = new LoadDspTicker();
+                loadDspTickers.setTicker(stock.getTicker());
+                loadDspTickers.setCompanyDetails(page.getResponseData()); 
+                allLoadDspTickers.add(loadDspTickers);
+            }
+        }
+        
+        return allLoadDspTickers;
+    }
 }

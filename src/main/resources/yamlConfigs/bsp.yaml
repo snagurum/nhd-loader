@@ -14,6 +14,6 @@ pages:
     url: https://www.nseindia.com/api/NextApi/apiClient/GetQuoteApi?functionName=getHistoricalTradeData&symbol=$gParam1$&series=EQ&fromDate=$startDate1$&toDate=$endDate1$&csv=true
     referer: https://www.nseindia.com
     validationStatusCode: 200
-    collate: true
+    persistantData: true
     
 

@@ -28,29 +28,26 @@ public class HttpUtil {
 
 	private Page page;
 	private Map<String, String> globalParams;
-	private String responseData;
-	Integer responseStatusCode;
 
 	public static HttpClient getHttpClient(){
 		CookieManager cookieManager = new CookieManager();
 		cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
 
 		HttpClient client = HttpClient.newBuilder()
-				.cookieHandler(cookieManager)
-				.connectTimeout(Duration.ofSeconds(10))
-				.build();
-				return client;
+			.cookieHandler(cookieManager)
+			.connectTimeout(Duration.ofSeconds(10))
+			.build();
+			return client;
 	}
 	
 	
 	public HttpUtil(Page page, Map<String,String> gParams){
 		this.page = page;
 		this.globalParams = gParams;
-		this.responseData ="";
 	}
 	
 	
-	public String process(HttpClient client) throws IOException, PageLoadException, InterruptedException{
+	public void process(HttpClient client) throws IOException, PageLoadException, InterruptedException{
 
 		String url = addParam();
 		HttpRequest.Builder builder = HttpRequest.newBuilder().uri(URI.create(url));
@@ -59,19 +56,17 @@ public class HttpUtil {
 		HttpRequest httpRequest = builder.build();
 
 		HttpResponse<String> httpResponse = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-		this.responseData = httpResponse.body();
-		this.responseStatusCode = httpResponse.statusCode();
+		this.page.setResponseData(httpResponse.body());
+		this.page.setResponseStatusCode(httpResponse.statusCode());
 
 		doValidation();
 		doLoadParams();
-		return this.responseData;
+		return ;
 	}
 
 	private String addParam(){
 		String url = this.page.getUrl();
 		if(this.globalParams !=null){
-			System.out.println("URL : "+url);
-			System.out.println("this.globalParams = "+this.globalParams);
 			for (String key  : this.globalParams.keySet()) {
 				url = url.replace(key,this.globalParams.get(key));
 			}
@@ -97,11 +92,11 @@ public class HttpUtil {
 	}
 
 	private void doValidation(){
-		if(null!=this.page.getValidationString() && this.responseData.indexOf(this.page.getValidationString())>-1){
+		if(null!=this.page.getValidationString() && this.page.getReferer().indexOf(this.page.getValidationString())>-1){
 			throw new PageLoadException("PageLoad String validation Failure");
 		}
 
-		if(null != this.page.getValidationStatusCode() && !this.page.getValidationStatusCode().equals(this.responseStatusCode) ){
+		if(null != this.page.getValidationStatusCode() && !this.page.getValidationStatusCode().equals(this.page.getResponseStatusCode()) ){
 			throw new PageLoadException("PageLoad statusCode validation Failure");
 		}
 	}
@@ -109,8 +104,7 @@ public class HttpUtil {
 	private void doLoadParams(){		
 		if(this.page.getPageParams()!=null)
 		for (PageParam pageParam : this.page.getPageParams()) {
-			this.globalParams.put(pageParam.getName(),getSubstringBetween(new String(this.responseData), pageParam.getStartString(), pageParam.getEndString()));
-			System.out.println("this.globalParams = " + this.globalParams);
+			this.globalParams.put(pageParam.getName(),getSubstringBetween(new String(this.page.getResponseData()), pageParam.getStartString(), pageParam.getEndString()));
 		}
 	}
 

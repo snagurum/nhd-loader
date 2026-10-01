@@ -40,13 +40,13 @@ public class BspRunner {
     private static final Logger log = LoggerFactory.getLogger(BspRunner.class);
 
     private static final Bot BSP_BOT;
-    private static Integer STOCKS_PER_RUN = 1;
+    private static Integer STOCKS_PER_RUN = 2;
 
     static {        
         Yaml yaml = new Yaml(new Constructor(Bot.class, new LoaderOptions()));
         InputStream inputStream = BspRunner.class.getClassLoader().getResourceAsStream("yamlConfigs/bsp.yaml");
          BSP_BOT = yaml.load(inputStream);
-        System.out.println(BSP_BOT);       
+        log.info(BSP_BOT.toString());       
     }
 
     @Autowired
@@ -55,7 +55,6 @@ public class BspRunner {
     @Autowired
     private AuditService auditService ;
 
-    
     @Scheduled(cron="#{${loader.bsp_ticker.scheduler.cron}}")
     public void runJob(){
 
@@ -73,13 +72,9 @@ public class BspRunner {
         remainingStocks.forEach(item -> {
             JobStatus bspUnit = auditService.startJobWithComment(JobName.BSP_TICKER_UNIT, item.getTicker());
             try{
-                java.util.Calendar cal = java.util.Calendar.getInstance();
-                cal.setTime(item.getDateOfListing());
 
-                int actualYear = cal.get(java.util.Calendar.YEAR);
-                String result = runJobTemp(item.getTicker(),actualYear);                    
-                ObjectMapper mapper = new ObjectMapper();
-                List<LoadBspTicker> loadBspTickers = mapper.readValue(result, new TypeReference<List<LoadBspTicker>>() {});
+                Bot bot = runJob0(item);
+                List<LoadBspTicker> loadBspTickers = buildObjects(bot);
 
                 item.setHistoryLoaded(true);
                 stockService.saveAllLoadBspTickers(loadBspTickers);
@@ -94,15 +89,32 @@ public class BspRunner {
         });
     
         log.info( "BSP Loader End: Total = {},  Retrieved = {}", remainingStocks.size(), processedTickers.size());
-        auditService.endJobWithSuccessFailureCount(audit,processedTickers.size(),remainingStocks.size());
+        auditService.endJobWithSuccessFailureCount(audit,processedTickers.size(),(remainingStocks.size()-processedTickers.size()));
     }
 
-    public String runJobTemp(String ticker, Integer yearOfListing) throws PageLoadException, IOException, InterruptedException{
+    public List<LoadBspTicker> buildObjects(Bot bot) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        List<LoadBspTicker> allLoadBspTickers = new ArrayList<>();
+
+        for (Page page : bot.getPages()) {
+            if(page.getPersistantData()){
+                List<LoadBspTicker> loadBspTickers = mapper.readValue(page.getResponseData(), new TypeReference<List<LoadBspTicker>>() {});
+                allLoadBspTickers.addAll(loadBspTickers);
+            }
+        }
+        
+        return allLoadBspTickers;
+    }
+
+    public Bot runJob0(Stock stock) throws PageLoadException, IOException, InterruptedException{
         Bot bspBot = SerializationUtils.clone(BSP_BOT);
-        Map<String,String> gParam = Map.of("$gParam1$",ticker);
+        Map<String,String> gParam = Map.of("$gParam1$",stock.getTicker());
         BotUtil botUtil = new BotUtil(bspBot, gParam);
-        Page templatePage = bspBot.getPages().remove(bspBot.getPages().size()-1);        
-        List<Integer> years = getYears(yearOfListing);
+        Page templatePage = bspBot.getPages().remove(bspBot.getPages().size()-1);
+
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTime(stock.getDateOfListing());
+        List<Integer> years = getYears(cal.get(java.util.Calendar.YEAR));
         
         for (Integer eachYear : years) {
             Page page = SerializationUtils.clone(templatePage);
@@ -110,8 +122,9 @@ public class BspRunner {
             page.setUrl(page.getUrl().replace("$endDate1$","31-12-"+eachYear));
             bspBot.getPages().add(page);
         }
-        
-        return botUtil.process().replace("][",",");
+
+        botUtil.process();
+        return bspBot;
     }
 
     public List<Integer> getYears(int startYear) {

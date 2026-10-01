@@ -20,9 +20,11 @@ public class Page  implements Serializable{
     private String validationString;
     private Integer validationStatusCode;
     private Integer timeout = 10;
-    private Boolean collate = false;
     private String referer;
     private Map<String,String> params;
     private List<PageParam> pageParams;
+    private Integer responseStatusCode;
+    private String responseData;
+    private Boolean persistantData = false;
        
 }

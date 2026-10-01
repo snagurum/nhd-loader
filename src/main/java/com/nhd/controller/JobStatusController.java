@@ -16,6 +16,8 @@ import com.web.crawler.Bot;
 import com.web.crawler.BotUtil;
 import com.web.crawler.PageLoadException;
 
+import lombok.AllArgsConstructor;
+
 import org.apache.commons.lang3.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,20 +45,21 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
+@AllArgsConstructor 
 public class JobStatusController {
 
 	private static final Logger log = LoggerFactory.getLogger(JobStatusController.class);
 
-	@Autowired
+	// @Autowired
 	DspRunner dspTickerRunner;
 
-	@Autowired
+	// @Autowired
 	BspRunner bspTickerRunner;
 
-	@Autowired
+	// @Autowired
 	TickerRunner tickerRunner;
 
-	@Autowired
+	// @Autowired
 	AuditService auditService;
 
 	@GetMapping("/tjs")
@@ -68,15 +71,15 @@ public class JobStatusController {
 	public String help(){
 		StringBuilder message = new StringBuilder();
 		message
-				.append("/help                                               help message" ).append("\n")
-  			   	.append("/tjs                                                Today's Job Status ").append("\n")
-			   	.append("/runJob/ticker                                      Run Ticker job").append("\n")
-				.append("/runJob/dspTicker                                   Run DSP Ticker job").append("\n")
-				.append("/runJob/bspTicker                                   Run BSP Ticker job").append("\n")
-				.append("/getData/bspTicker?ticker=INFY&fromDate=2024-11-18  GET BSP Ticker Data").append("\n")
-				.append("/getData/dspTicker?ticker=INFY&fromDate=2024-11-18  GET DSP Ticker Data").append("\n")
-				.append("/test/bulk?ticker=INFY&dol=2024-11-18&series=BE     test BSP Ticker job").append("\n")
-				.append("/test/dsp?ticker=INFY                               test DSP Ticker job").append("\n")
+                        .append("/help                                               help message" ).append("\n")
+                        .append("/tjs                                                Today's Job Status ").append("\n")
+                        .append("/runJob/ticker                                      Run Ticker job").append("\n")
+                        .append("/runJob/dspTicker                                   Run DSP Ticker job").append("\n")
+                        .append("/runJob/bspTicker                                   Run BSP Ticker job").append("\n")
+                        .append("/getData/bspTicker?ticker=INFY&fromDate=2024-11-18  GET BSP Ticker Data").append("\n")
+                        .append("/getData/dspTicker?ticker=INFY&fromDate=2024-11-18  GET DSP Ticker Data").append("\n")
+                        .append("/test/bulk?ticker=INFY&dol=2024-11-18&series=BE     test BSP Ticker job").append("\n")
+                        .append("/test/dsp?ticker=INFY                               test DSP Ticker job").append("\n")
 		;
 		return message.toString();
 	}
@@ -113,10 +116,10 @@ public class JobStatusController {
 		Bot dspBot = SerializationUtils.clone(DSP_BOT);
 		Map<String, String> gParam = new HashMap<>(Map.of("$gParam1$", stock.getTicker()));
 		BotUtil botUtil = new BotUtil(dspBot, gParam);
-		String data = botUtil.process();
+		botUtil.process();
 		LoadDspTicker loadDspTickers = new LoadDspTicker();
 		loadDspTickers.setTicker(stock.getTicker());
-		loadDspTickers.setCompanyDetails(data); 
+		loadDspTickers.setCompanyDetails(dspBot.getPages().get(2).getResponseData()); 
 
 		return loadDspTickers;
 	}
@@ -222,9 +225,10 @@ public class JobStatusController {
 			stock.setSeries(series.get());
 			log.info("Ticker = {}, Dol = {}",stock.getTicker(),stock.getDateOfListing());
 		}
-                String temp  = bspTickerRunner.runJobTemp("21STCENMGM", 1995);
-                System.out.println( "data = "+ temp);
-		return temp;
+                // String temp  = bspTickerRunner.runJobTemp("21STCENMGM", 1995);
+                Bot bot  = bspTickerRunner.runJob0(stock);
+                System.out.println( "data = "+ bot.getPages());
+		return bot.getPages().toString();
 	}
 
 }

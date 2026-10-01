@@ -11,10 +11,12 @@ import com.nhd.service.StockService;
 import com.nhd.util.JobName;
 import com.web.crawler.Bot;
 import com.web.crawler.BotUtil;
+import com.web.crawler.Page;
 import com.web.crawler.PageLoadException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,32 +36,29 @@ public class TickerRunner {
     
     private static final Logger log = LoggerFactory.getLogger(TickerRunner.class);
 
-    @Autowired
-    private StockService stockService ;
-
-    @Autowired
-    private AuditService auditService ;
-
     private static final Bot TICKER_BOT;
     static {
         
         Yaml yaml = new Yaml(new Constructor(Bot.class, new LoaderOptions()));
         InputStream inputStream = TickerRunner.class.getClassLoader().getResourceAsStream("yamlConfigs/ticker.yaml");
          TICKER_BOT = yaml.load(inputStream);
-        System.out.println(TICKER_BOT);       
+        log.info(TICKER_BOT.toString());       
     }
 
+    @Autowired
+    private StockService stockService ;
 
+    @Autowired
+    private AuditService auditService ;
+    
     @Scheduled( cron = "#{${loader.ticker.scheduler.cron}}")
     public void runJob(){
         log.trace("method tickerRunner.runJob start");
         JobStatus audit = auditService.startJob(JobName.TICKER);
 
         try {
-            Bot tickerBot = SerializationUtils.clone(TICKER_BOT);
-            BotUtil botUtil = new BotUtil(tickerBot);
-            String data = botUtil.process();
-            List<LoadTicker> tickers = this.loadObjectList(data);
+            Bot bot = runJob0();
+            List<LoadTicker> tickers = buildObjects(bot);
             stockService.saveAllLoadTickers(tickers );
             log.info("loaded tickers count = {}", tickers.size());
             audit.setSuccessCount(tickers.size());
@@ -70,6 +69,22 @@ public class TickerRunner {
         log.trace("method tickerRunner.runJob end");
     }
 
+    public Bot runJob0() throws PageLoadException, IOException, InterruptedException{
+        Bot tickerBot = SerializationUtils.clone(TICKER_BOT);
+        BotUtil botUtil = new BotUtil(tickerBot);
+        botUtil.process();
+        return tickerBot;
+    }
+
+    public List<LoadTicker> buildObjects(Bot bot){
+        List<LoadTicker> tickers = new ArrayList<>();
+        for(Page page: bot.getPages()){
+            if(page.getPersistantData())
+                tickers.addAll(this.loadObjectList(page.getResponseData()));
+        }
+        return tickers;
+
+    }
 
     public List<LoadTicker> loadObjectList(String dataString) {
         try {

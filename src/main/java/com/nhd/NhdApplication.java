@@ -43,13 +43,13 @@ public class NhdApplication {
 //	}
 
 
-	@Bean
-	@Order(1)
-	public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
-		return args -> {
-			tickerRunner.runJob();
-		};
-	}
+	// @Bean
+	// @Order(1)
+	// public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
+	// 	return args -> {
+	// 		tickerRunner.runJob();
+	// 	};
+	// }
 
 
 //	@Bean

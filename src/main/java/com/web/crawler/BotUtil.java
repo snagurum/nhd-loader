@@ -18,18 +18,14 @@ public class BotUtil {
         this.gParam = gParam ;
     }
     
-    public String process() throws PageLoadException, IOException, InterruptedException{
+    public void process() throws PageLoadException, IOException, InterruptedException{
         HttpClient client = HttpUtil.getHttpClient();
-        String responseData = "";
-        String data = "";
+
         for( Page eachPage: this.bot.getPages()){
             HttpUtil httpUtil = new HttpUtil(eachPage,gParam);
-            data = httpUtil.process(client);
-            if (eachPage.getCollate())
-                responseData = responseData + data;
+            httpUtil.process(client);
             BotUtil.sleepQuietly(1000);
         }
-        return "".equals(responseData)? data: responseData;
     }
 
     public static void sleepQuietly(int i) {
