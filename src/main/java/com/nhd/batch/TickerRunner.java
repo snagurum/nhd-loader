@@ -14,6 +14,8 @@ import com.web.crawler.BotUtil;
 import com.web.crawler.Page;
 import com.web.crawler.PageLoadException;
 
+import lombok.AllArgsConstructor;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -30,7 +32,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-@Component 
+@Component
+@AllArgsConstructor
 public class TickerRunner {
     
     private static final Logger log = LoggerFactory.getLogger(TickerRunner.class);

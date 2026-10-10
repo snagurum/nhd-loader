@@ -11,6 +11,8 @@ import com.web.crawler.BotUtil;
 import com.web.crawler.Page;
 import com.web.crawler.PageLoadException;
 
+import lombok.AllArgsConstructor;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -28,7 +30,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
-@Component 
+@Component
+@AllArgsConstructor
 public class DspRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DspRunner.class);
