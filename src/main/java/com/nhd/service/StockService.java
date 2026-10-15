@@ -1,11 +1,14 @@
 package com.nhd.service;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import com.nhd.dto.LoadBspTickerDTO;
+import com.nhd.dto.LoadDspTickerDTO;
 import com.nhd.models.LoadBspTicker;
 import com.nhd.models.LoadDspTicker;
 import com.nhd.models.LoadTicker;
@@ -34,7 +37,11 @@ public interface StockService{
 
         List<LoadBspTicker> getBspTickers(String ticker, Date date);
 
-        public Page<LoadDspTicker> getDspsByPriceDate(String date, Pageable pageable);
+        public Page<LoadDspTickerDTO> getDspsByPriceDate(LocalDate date, Pageable pageable);
 
-        public Page<LoadBspTicker> getBspsByPriceDate(String date, Pageable pageable);
+        public Page<LoadBspTickerDTO> getBspsByPriceDate(LocalDate date, Pageable pageable);
+
+        public Page<LoadDspTickerDTO> getDspsByPriceDateAndTickerStartingWith(LocalDate date, String ticker, Pageable pageable);
+
+        public Page<LoadBspTickerDTO> getBspsByPriceDateAndTickerStartingWith(LocalDate date, String ticker, Pageable pageable);
 }

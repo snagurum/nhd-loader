@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 public interface LoadDspTickerRepository extends JpaRepository<LoadDspTicker, Long>{
@@ -20,5 +21,7 @@ public interface LoadDspTickerRepository extends JpaRepository<LoadDspTicker, Lo
     List<LoadDspTicker> findByTickerFromDate(@Param("ticker") String ticker,@Param("fromDate") Date fromDate);
 
     Page<LoadDspTicker> findByPriceDate(String date, Pageable pageable);
+
+    Page<LoadDspTicker> findByPriceDateAndTickerStartingWith(String date, String ticker, Pageable pageable);
 
 }

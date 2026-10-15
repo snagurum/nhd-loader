@@ -21,5 +21,7 @@ public interface LoadBspTickerRepository extends JpaRepository<LoadBspTicker, Lo
 
     Page<LoadBspTicker> findByPriceDate(String date, Pageable pageable);
 
+    Page<LoadBspTicker> findByPriceDateAndTickerStartingWith(String date, String ticker, Pageable pageable);
+
 }
 

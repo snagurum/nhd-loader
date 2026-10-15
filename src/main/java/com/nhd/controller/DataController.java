@@ -1,5 +1,7 @@
 package com.nhd.controller;
 
+import com.nhd.dto.LoadBspTickerDTO;
+import com.nhd.dto.LoadDspTickerDTO;
 import com.nhd.models.LoadBspTicker;
 import com.nhd.models.LoadDspTicker;
 import com.nhd.models.Stock;
@@ -13,12 +15,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedModel;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,22 +38,33 @@ public class DataController {
         return stockService.getStocks();
     }
 
-    @GetMapping("/get/bsp/{date}")
-    public PagedModel<LoadBspTicker> getBspByDate(
-            @PathVariable String date,
-            @PageableDefault(size = 1000) Pageable pageable
-    ) {
-        Page<LoadBspTicker> pages = stockService.getBspsByPriceDate(date, pageable);
+    @GetMapping("/bsp/search")
+    public PagedModel<LoadBspTickerDTO> getBspByDate(
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+        @RequestParam String ticker,
+        @PageableDefault(size = 1000) Pageable pageable){
+        Page<LoadBspTickerDTO> pages = null;
+        log.info("Ticker = {}, date = {}", ticker, date);
+        if(null == ticker)
+            pages = stockService.getBspsByPriceDate(date, pageable);
+        else
+            pages = stockService.getBspsByPriceDateAndTickerStartingWith(date, ticker, pageable);
+
         return new PagedModel<>(pages);
     }
 
 
-    @GetMapping("/get/dsp/{date}")
-    public PagedModel<LoadDspTicker> getDspByDate(
-            @PathVariable String date,
-            @PageableDefault(size = 1000) Pageable pageable
-    ) {
-        return new PagedModel<>(stockService.getDspsByPriceDate(date, pageable));
+    @GetMapping("/dsp/search")
+    public PagedModel<LoadDspTickerDTO> getDspByDate(
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+        @RequestParam String ticker,
+        @PageableDefault(size = 1000) Pageable pageable){
+            Page<LoadDspTickerDTO> pages = null;
+        if(null == ticker)
+            pages = stockService.getDspsByPriceDate(date, pageable);
+        else
+            pages = stockService.getDspsByPriceDateAndTickerStartingWith(date, ticker, pageable);
+        return new PagedModel<>(pages);
     }
 
     @GetMapping("/bsp")

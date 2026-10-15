@@ -1,7 +1,11 @@
 package com.nhd.service;
 
 import java.sql.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
 
+import com.nhd.dto.LoadBspTickerDTO;
+import com.nhd.dto.LoadDspTickerDTO;
 import com.nhd.models.LoadBspTicker;
 import com.nhd.models.LoadDspTicker;
 import com.nhd.models.LoadTicker;
@@ -92,11 +98,63 @@ public class StockServiceImpl implements StockService {
         loadBspTickersRepo.saveAll(tickers);
     }
 
-    public Page<LoadBspTicker> getBspsByPriceDate(String date, Pageable pageable) {
-        return loadBspTickersRepo.findByPriceDate(date, pageable);
+    public Page<LoadBspTickerDTO> getBspsByPriceDate(LocalDate date, Pageable pageable) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
+        String formattedDate = date.format(formatter);
+        return loadBspTickersRepo.findByPriceDate(formattedDate, pageable)
+            .map(this::convertToDTO);
     }
 
-    public Page<LoadDspTicker> getDspsByPriceDate(String date, Pageable pageable) {
-        return loadDspRepo.findByPriceDate(date, pageable);
+    public Page<LoadDspTickerDTO> getDspsByPriceDate(LocalDate date, Pageable pageable) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
+        String formattedDate = date.format(formatter);
+        return loadDspRepo.findByPriceDate(formattedDate, pageable)
+            .map(this::convertToDTO);
     }
+
+    public Page<LoadBspTickerDTO> getBspsByPriceDateAndTickerStartingWith(LocalDate date, String ticker, Pageable pageable) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
+        String formattedDate = date.format(formatter);
+        return loadBspTickersRepo.findByPriceDateAndTickerStartingWith(formattedDate, ticker, pageable)
+            .map(this::convertToDTO);
+    }
+
+    public Page<LoadDspTickerDTO> getDspsByPriceDateAndTickerStartingWith(LocalDate date, String ticker, Pageable pageable) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
+        String formattedDate = date.format(formatter);
+        return loadDspRepo.findByPriceDateAndTickerStartingWith(formattedDate, ticker, pageable)
+            .map(this::convertToDTO);
+    }
+
+    private LoadBspTickerDTO convertToDTO(LoadBspTicker bsp){
+        LoadBspTickerDTO bspDto = new LoadBspTickerDTO();
+        bspDto.setId(bsp.getId());
+        bspDto.setTicker(bsp.getTicker());
+        bspDto.setPriceDate(bsp.getPriceDate());
+        bspDto.setSeries(bsp.getSeries());
+        bspDto.setVwap(bsp.getVwap());
+        bspDto.setHigh52(bsp.getHigh52());
+        bspDto.setLow52(bsp.getLow52());
+        bspDto.setTradeClosePrice(bsp.getTradeClosePrice());
+        bspDto.setTradeOpenPrice(bsp.getTradeOpenPrice());
+        bspDto.setTradePrevClosePrice(bsp.getTradePrevClosePrice());
+        bspDto.setTradeHighPrice(bsp.getTradeHighPrice());
+        bspDto.setTradeLowPrice(bsp.getTradeLowPrice());
+        bspDto.setTradeValue(bsp.getTradeValue());
+        bspDto.setNoOfTradeQty(bsp.getNoOfTradeQty());
+        bspDto.setNoOfTrades(bsp.getNoOfTrades());
+        return bspDto;
+    }
+
+    private LoadDspTickerDTO convertToDTO(LoadDspTicker dsp){
+        LoadDspTickerDTO dspDTO = new LoadDspTickerDTO();
+        dspDTO.setId(dsp.getId());
+        dspDTO.setCompanyDetails(dsp.getCompanyDetails());
+        dspDTO.setPriceDate(dsp.getPriceDate());
+        dspDTO.setTicker(dsp.getTicker());
+        dspDTO.setTradeDetails(dsp.getTradeDetails());
+        return dspDTO;
+    }
+
+
 }
