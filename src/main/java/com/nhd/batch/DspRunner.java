@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +53,10 @@ public class DspRunner {
     
     @Scheduled(cron="#{${loader.dsp_ticker.scheduler.cron}}")
     public void runJob(){
+        if( this.stockService.isTodayAHoliday()){
+            log.info("Today {} is a Holday ", this.stockService.findByHolidayDate(LocalDate.now()));
+            return;
+        }
  
         if (!auditService.getTodaysJobStatusByJobName(String.valueOf(JobName.DSP_TICKER)).isEmpty()) return;        
         long jobStart = System.currentTimeMillis();

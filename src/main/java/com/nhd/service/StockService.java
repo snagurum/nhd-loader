@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 
 import com.nhd.dto.LoadBspTickerDTO;
 import com.nhd.dto.LoadDspTickerDTO;
+import com.nhd.models.Holiday;
 import com.nhd.models.LoadBspTicker;
 import com.nhd.models.LoadDspTicker;
 import com.nhd.models.LoadTicker;
@@ -46,4 +47,8 @@ public interface StockService{
         public Page<LoadDspTickerDTO> getDspsByPriceDateAndTickerStartingWith(LocalDate date, String ticker, Pageable pageable);
 
         public Page<LoadBspTickerDTO> getBspsByPriceDateAndTickerStartingWith(LocalDate date, String ticker, Pageable pageable);
+
+        public boolean isTodayAHoliday();
+
+        public Holiday findByHolidayDate(LocalDate holidayDate);
 }

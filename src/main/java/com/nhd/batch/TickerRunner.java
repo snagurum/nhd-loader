@@ -18,6 +18,7 @@ import lombok.AllArgsConstructor;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -50,9 +51,15 @@ public class TickerRunner {
     private StockService stockService ;
 
     private AuditService auditService ;
-    
+
+
     @Scheduled( cron = "#{${loader.ticker.scheduler.cron}}")
     public void runJob(){
+        if( this.stockService.isTodayAHoliday()){
+            log.info("Today {} is a Holday ", this.stockService.findByHolidayDate(LocalDate.now()));
+            return;
+        }
+
         log.trace("method tickerRunner.runJob start");
         JobStatus audit = auditService.startJob(JobName.TICKER);
 

@@ -16,10 +16,12 @@ import org.springframework.stereotype.Service;
 
 import com.nhd.dto.LoadBspTickerDTO;
 import com.nhd.dto.LoadDspTickerDTO;
+import com.nhd.models.Holiday;
 import com.nhd.models.LoadBspTicker;
 import com.nhd.models.LoadDspTicker;
 import com.nhd.models.LoadTicker;
 import com.nhd.models.Stock;
+import com.nhd.service.repo.HolidayRepository;
 import com.nhd.service.repo.LoadBspTickerRepository;
 import com.nhd.service.repo.LoadDspTickerRepository;
 import com.nhd.service.repo.LoadTickerRepository;
@@ -40,6 +42,8 @@ public class StockServiceImpl implements StockService {
     StockRepository stockRepo;
 
     LoadBspTickerRepository loadBspTickersRepo;
+
+    HolidayRepository holidayRepository;
 
 
     public List<Stock> getActiveTickers(){
@@ -159,5 +163,11 @@ public class StockServiceImpl implements StockService {
         return dspDTO;
     }
 
+    public boolean isTodayAHoliday() {
+        return holidayRepository.existsByHolidayDateAndActiveTrue(LocalDate.now());
+    }
 
+    public Holiday findByHolidayDate(LocalDate date){
+        return holidayRepository.findByHolidayDate(date);
+    }
 }
