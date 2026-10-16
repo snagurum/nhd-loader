@@ -7,8 +7,12 @@ import com.nhd.models.JobStatus;
 import com.nhd.models.LoadBspTicker;
 import com.nhd.models.Stock;
 import com.nhd.service.AuditService;
+import com.nhd.service.StockDateProjection;
 import com.nhd.service.StockService;
+import com.nhd.util.DateSplitter;
+import com.nhd.util.DateUtil;
 import com.nhd.util.JobName;
+import com.nhd.util.DateSplitter.DatePair;
 import com.web.crawler.Bot;
 import com.web.crawler.BotUtil;
 import com.web.crawler.Page;
@@ -18,9 +22,8 @@ import lombok.AllArgsConstructor;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 
@@ -57,8 +60,8 @@ public class BspRunner {
     @Scheduled(cron="#{${loader.bsp_ticker.scheduler.cron}}")
     public void runJob(){
 
-        List<Stock> remainingStocks = stockService.noHistoryStocksWithLimit(STOCKS_PER_RUN);
-        if (remainingStocks.isEmpty()){
+        List<StockDateProjection> remainingStockDateProjections = stockService.getBspLoadPendingStockDatesWithLimit(STOCKS_PER_RUN);
+        if (remainingStockDateProjections.isEmpty()){
             log.info("BSP: No tickers available stopping...");
             return;
         }
@@ -66,17 +69,16 @@ public class BspRunner {
         List<String> processedTickers = new ArrayList<>();
         JobStatus audit = auditService.startJob(JobName.BSP_TICKER);
 
-        log.info( "BSP Loader  Start: Total = {},  Retrieved = {}", remainingStocks.size(), processedTickers.size());
+        log.info( "BSP Loader  Start: Total = {},  Retrieved = {}", remainingStockDateProjections.size(), processedTickers.size());
 
-        remainingStocks.forEach(item -> {
+        remainingStockDateProjections.forEach(item -> {
             JobStatus bspUnit = auditService.startJobWithComment(JobName.BSP_TICKER_UNIT, item.getTicker());
             try{
 
                 Bot bot = runJob0(item);
                 List<LoadBspTicker> loadBspTickers = buildObjects(bot);
-
-                item.setHistoryLoaded(true);
-                persistData(loadBspTickers, item);
+                // item.setHistoryLoaded(true);
+                persistData(loadBspTickers);
                 processedTickers.add(item.getTicker());
                 auditService.endJobWithSuccessFailureCount(bspUnit,loadBspTickers.size(),0);
 
@@ -86,8 +88,8 @@ public class BspRunner {
             }
         });
     
-        log.info( "BSP Loader End: Total = {},  Retrieved = {}", remainingStocks.size(), processedTickers.size());
-        auditService.endJobWithSuccessFailureCount(audit,processedTickers.size(),(remainingStocks.size()-processedTickers.size()));
+        log.info( "BSP Loader End: Total = {},  Retrieved = {}", remainingStockDateProjections.size(), processedTickers.size());
+        auditService.endJobWithSuccessFailureCount(audit,processedTickers.size(),(remainingStockDateProjections.size()-processedTickers.size()));
     }
 
     public List<LoadBspTicker> buildObjects(Bot bot) throws IOException {
@@ -104,20 +106,18 @@ public class BspRunner {
         return allLoadBspTickers;
     }
 
-    public Bot runJob0(Stock stock) throws PageLoadException, IOException, InterruptedException{
+    public Bot runJob0(StockDateProjection stockDateProjection) throws PageLoadException, IOException, InterruptedException{
         Bot bspBot = SerializationUtils.clone(BSP_BOT);
-        Map<String,String> gParam = Map.of("$gParam1$",stock.getTicker());
+        Map<String,String> gParam = Map.of("$gParam1$",stockDateProjection.getTicker());
         BotUtil botUtil = new BotUtil(bspBot, gParam);
         Page templatePage = bspBot.getPages().remove(bspBot.getPages().size()-1);
 
-        java.util.Calendar cal = java.util.Calendar.getInstance();
-        cal.setTime(stock.getDateOfListing());
-        List<Integer> years = getYears(cal.get(java.util.Calendar.YEAR));
-        
-        for (Integer eachYear : years) {
+        LocalDate endDate = LocalDate.now();
+        List<DatePair> datePairs = DateSplitter.splitByYear(stockDateProjection.getLatestDate(), endDate);
+        for(DatePair datePair: datePairs){
             Page page = SerializationUtils.clone(templatePage);
-            page.setUrl(page.getUrl().replace("$startDate1$","01-01-"+eachYear));
-            page.setUrl(page.getUrl().replace("$endDate1$","31-12-"+eachYear));
+            page.setUrl(page.getUrl().replace("$startDate1$",DateUtil.getDateStr_ddMMyyyy(datePair.startDate())));
+            page.setUrl(page.getUrl().replace("$endDate1$",DateUtil.getDateStr_ddMMyyyy(datePair.endDate())));
             bspBot.getPages().add(page);
         }
 
@@ -130,14 +130,8 @@ public class BspRunner {
         stockService.saveStock(stock);
     }
 
-    public List<Integer> getYears(int startYear) {
-        List<Integer> availableYears = new ArrayList<>();        
-        Calendar calendar = new GregorianCalendar();
-        int endYear = calendar.get(Calendar.YEAR);        
-        for (int i = startYear; i <= endYear; i++) {
-            availableYears.add(i);
-        }        
-        return availableYears;
+    public void persistData(List <LoadBspTicker> loadBspTickers){
+        stockService.saveAllLoadBspTickers(loadBspTickers);
     }
 
 }

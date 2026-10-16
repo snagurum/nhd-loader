@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +44,10 @@ public class StockServiceImpl implements StockService {
 
     public List<Stock> getActiveTickers(){
         return stockRepo.getActiveTickers();
+    }
+
+    public List<StockDateProjection> getBspLoadPendingStockDatesWithLimit( int rowCount){
+        return stockRepo.getBspLoadPendingStockDatesWithLimit(Limit.of(rowCount));
     }
 
     public List<Stock> noHistoryStocks(){

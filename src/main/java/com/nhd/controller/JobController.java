@@ -6,6 +6,7 @@ import com.nhd.batch.TickerRunner;
 import com.nhd.models.JobStatus;
 import com.nhd.models.Stock;
 import com.nhd.service.AuditService;
+import com.nhd.service.StockDateProjection;
 import com.web.crawler.Bot;
 import com.web.crawler.BotUtil;
 import com.web.crawler.PageLoadException;
@@ -15,6 +16,8 @@ import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,6 +28,7 @@ import org.yaml.snakeyaml.constructor.Constructor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,23 +109,15 @@ public class JobController {
 
 	@GetMapping("/test/bsp")
 	public String bulkTest(@RequestParam Optional<String> ticker, @RequestParam Optional<String> dol, @RequestParam Optional<String> series) throws PageLoadException, IOException, InterruptedException {
-		Stock stock = new Stock();
-		if(!ticker.isPresent()){
-			 stock.setTicker("INFY");
-			 stock.setSeries("EQ");
-			 stock.setDateOfListing(Date.valueOf("1995-08-08"));
-			// stock.setTicker("ZOMATO");
-			// stock.setDateOfListing(Date.valueOf("2024-01-09"));
-			// stock.setTicker("TATATECH");
-			// stock.setDateOfListing(Date.valueOf("2023-01-09"));
-		}
-		else{
-			stock.setTicker( ticker.get());
-			stock.setDateOfListing(Date.valueOf(dol.get()));
-			stock.setSeries(series.get());
-			log.info("Ticker = {}, Dol = {}",stock.getTicker(),stock.getDateOfListing());
-		}
-		Bot bot  = bspTickerRunner.runJob0(stock);
+		ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
+
+		Map<String, Object> data = new HashMap<>();
+		data.put("ticker", "5PAISA");
+		data.put("latestDate", LocalDate.parse("2017-11-16"));
+
+		StockDateProjection mockProjection = factory.createProjection(StockDateProjection.class, data);
+
+		Bot bot  = bspTickerRunner.runJob0(mockProjection);
 		return bot.getPages().toString();
 	}
 

@@ -19,6 +19,8 @@ public interface StockService{
 
         List<Stock> getActiveTickers();
 
+        List<StockDateProjection> getBspLoadPendingStockDatesWithLimit(int rowsCount);
+
         List<Stock> noHistoryStocks();
 
         List<Stock> noHistoryStocksWithLimit(int rowsCount);

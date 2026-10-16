@@ -24,7 +24,7 @@ public class BotUtil {
         for( Page eachPage: this.bot.getPages()){
             HttpUtil httpUtil = new HttpUtil(eachPage,gParam);
             httpUtil.process(client);
-            BotUtil.sleepQuietly(1000);
+            BotUtil.sleepQuietly(500);
         }
     }
 
