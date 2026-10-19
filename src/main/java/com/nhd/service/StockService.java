@@ -44,6 +44,10 @@ public interface StockService{
 
         public Page<LoadBspTickerDTO> getBspsByPriceDate(LocalDate date, Pageable pageable);
 
+        public Page<LoadDspTickerDTO> getDspsByPriceDateAndTicker(LocalDate date, String ticker, Pageable pageable);
+
+        public Page<LoadBspTickerDTO> getBspsByPriceDateAndTicker(LocalDate date, String ticker, Pageable pageable);
+
         public Page<LoadDspTickerDTO> getDspsByPriceDateAndTickerStartingWith(LocalDate date, String ticker, Pageable pageable);
 
         public Page<LoadBspTickerDTO> getBspsByPriceDateAndTickerStartingWith(LocalDate date, String ticker, Pageable pageable);

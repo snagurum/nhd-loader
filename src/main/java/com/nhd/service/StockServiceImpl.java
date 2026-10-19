@@ -119,6 +119,20 @@ public class StockServiceImpl implements StockService {
             .map(this::convertToDTO);
     }
 
+    public Page<LoadBspTickerDTO> getBspsByPriceDateAndTicker(LocalDate date, String ticker, Pageable pageable) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
+        String formattedDate = date.format(formatter);
+        return loadBspTickersRepo.findByPriceDateAndTicker(formattedDate, ticker, pageable)
+            .map(this::convertToDTO);
+    }
+
+    public Page<LoadDspTickerDTO> getDspsByPriceDateAndTicker(LocalDate date, String ticker,  Pageable pageable) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
+        String formattedDate = date.format(formatter);
+        return loadDspRepo.findByPriceDateAndTicker(formattedDate, ticker, pageable)
+            .map(this::convertToDTO);
+    }
+
     public Page<LoadBspTickerDTO> getBspsByPriceDateAndTickerStartingWith(LocalDate date, String ticker, Pageable pageable) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
         String formattedDate = date.format(formatter);

@@ -47,8 +47,10 @@ public class DataController {
         log.info("Ticker = {}, date = {}", ticker, date);
         if(null == ticker)
             pages = stockService.getBspsByPriceDate(date, pageable);
-        else
+        else if(1 == ticker.length())
             pages = stockService.getBspsByPriceDateAndTickerStartingWith(date, ticker, pageable);
+        else
+            pages = stockService.getBspsByPriceDateAndTicker(date, ticker, pageable);
 
         return new PagedModel<>(pages);
     }
