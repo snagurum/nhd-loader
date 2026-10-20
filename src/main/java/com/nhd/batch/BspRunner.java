@@ -1,8 +1,6 @@
 package com.nhd.batch;
 
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhd.models.JobStatus;
 import com.nhd.models.LoadBspTicker;
 import com.nhd.models.Stock;
@@ -18,14 +16,8 @@ import com.web.crawler.BotUtil;
 import com.web.crawler.Page;
 import com.web.crawler.PageLoadException;
 
-import lombok.AllArgsConstructor;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.LoaderOptions;
@@ -36,6 +28,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import lombok.AllArgsConstructor;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 
 @Component
 @AllArgsConstructor

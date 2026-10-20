@@ -55,4 +55,6 @@ public interface StockService{
         public boolean isTodayAHoliday();
 
         public Holiday findByHolidayDate(LocalDate holidayDate);
+
+        public void saveAllHolidays(List<Holiday> holidays);
 }

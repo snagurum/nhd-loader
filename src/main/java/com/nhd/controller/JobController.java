@@ -2,6 +2,7 @@ package com.nhd.controller;
 
 import com.nhd.batch.BspRunner;
 import com.nhd.batch.DspRunner;
+import com.nhd.batch.HolidayRunner;
 import com.nhd.batch.TickerRunner;
 import com.nhd.models.JobStatus;
 import com.nhd.models.Stock;
@@ -46,6 +47,8 @@ public class JobController {
 
 	TickerRunner tickerRunner;
 
+	HolidayRunner holidayRunner;
+
 	AuditService auditService;
 
 	@GetMapping("/tjs")
@@ -83,6 +86,11 @@ public class JobController {
 	@GetMapping("/runJob/bspTicker")
 	public void runBspTickerJob(){
 		bspTickerRunner.runJob();
+	}
+
+	@GetMapping("/runJob/holiday")
+	public void runHolidayJob(){
+		holidayRunner.runJob();
 	}
 
 	@GetMapping("/test/dsp")

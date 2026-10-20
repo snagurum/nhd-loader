@@ -12,6 +12,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @Entity
 @Table(name = "holiday",schema = "lt")
 @Data
@@ -22,6 +25,8 @@ public class Holiday {
 
     @Id
     @Column(name = "holiday_date")
+    @JsonProperty("tradingDate")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MMM-yyyy")
     private LocalDate holidayDate;
 
     @Column(name = "week_day", nullable = false, length = 9)

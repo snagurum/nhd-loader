@@ -184,4 +184,8 @@ public class StockServiceImpl implements StockService {
     public Holiday findByHolidayDate(LocalDate date){
         return holidayRepository.findByHolidayDate(date);
     }
+
+    public void saveAllHolidays(List<Holiday> holidays){
+        holidayRepository.saveAll(holidays);
+    }
 }
