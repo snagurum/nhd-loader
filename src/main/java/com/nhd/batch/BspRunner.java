@@ -5,6 +5,7 @@ import com.nhd.models.JobStatus;
 import com.nhd.models.LoadBspTicker;
 import com.nhd.models.Stock;
 import com.nhd.service.AuditService;
+import com.nhd.service.BspService;
 import com.nhd.service.StockDateProjection;
 import com.nhd.service.StockService;
 import com.nhd.util.DateSplitter;
@@ -55,6 +56,8 @@ public class BspRunner {
         log.info(BSP_BOT.toString());       
     }
 
+    private BspService bspService ;
+
     private StockService stockService ;
 
     private AuditService auditService ;
@@ -62,7 +65,7 @@ public class BspRunner {
     @Scheduled(cron="#{${loader.bsp_ticker.scheduler.cron}}")
     public void runJob(){
 
-        List<StockDateProjection> remainingStockDateProjections = stockService.getBspLoadPendingStockDatesWithLimit(STOCKS_PER_RUN);
+        List<StockDateProjection> remainingStockDateProjections = bspService.getBspLoadPendingStockDatesWithLimit(STOCKS_PER_RUN);
         if (remainingStockDateProjections.isEmpty()){
             log.info("BSP: No tickers available stopping...");
             return;
@@ -128,12 +131,12 @@ public class BspRunner {
     }
 
     public void persistData(List <LoadBspTicker> loadBspTickers, Stock stock){
-        stockService.saveAllLoadBspTickers(loadBspTickers);
+        bspService.saveAllLoadBspTickers(loadBspTickers);
         stockService.saveStock(stock);
     }
 
     public void persistData(List <LoadBspTicker> loadBspTickers){
-        stockService.saveAllLoadBspTickers(loadBspTickers);
+        bspService.saveAllLoadBspTickers(loadBspTickers);
     }
 
 }

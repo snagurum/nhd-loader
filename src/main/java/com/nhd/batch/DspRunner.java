@@ -4,6 +4,7 @@ import com.nhd.models.JobStatus;
 import com.nhd.models.LoadDspTicker;
 import com.nhd.models.Stock;
 import com.nhd.service.AuditService;
+import com.nhd.service.DspService;
 import com.nhd.service.StockService;
 import com.nhd.util.JobName;
 import com.web.crawler.Bot;
@@ -47,6 +48,7 @@ public class DspRunner {
     }
     
     private StockService stockService;
+    private DspService dspService;
 
     private AuditService auditService;
     
@@ -105,7 +107,7 @@ public class DspRunner {
     }
 
     public void persistData(List<LoadDspTicker> loadDspTickers){
-        stockService.saveAllLoadDspTickers(loadDspTickers);
+        dspService.saveAllLoadDspTickers(loadDspTickers);
 
     }
 

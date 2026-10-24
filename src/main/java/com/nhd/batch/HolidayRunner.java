@@ -1,8 +1,5 @@
 package com.nhd.batch;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhd.models.Holiday;
 import com.nhd.models.JobStatus;
 import com.nhd.service.AuditService;
@@ -18,6 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.apache.commons.lang3.SerializationUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.LoaderOptions;
@@ -54,7 +54,7 @@ public class HolidayRunner {
 
     private ObjectMapper mapper;;
     
-    @Scheduled(cron="#{${loader.holday.scheduler.cron}}")
+    @Scheduled(cron="#{${loader.holiday.scheduler.cron}}")
     public void runJob(){
 
         JobStatus audit = auditService.startJob(JobName.HOLIDAY);

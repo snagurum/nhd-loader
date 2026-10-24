@@ -5,6 +5,8 @@ import com.nhd.dto.LoadDspTickerDTO;
 import com.nhd.models.LoadBspTicker;
 import com.nhd.models.LoadDspTicker;
 import com.nhd.models.Stock;
+import com.nhd.service.BspService;
+import com.nhd.service.DspService;
 import com.nhd.service.StockService;
 
 import lombok.AllArgsConstructor;
@@ -31,6 +33,10 @@ public class DataController {
 
     private static final Logger log = LoggerFactory.getLogger(DataController.class);
 
+    private DspService dspService ;
+
+    private BspService bspService ;
+
     private StockService stockService ;
 
     @GetMapping("/stocks")
@@ -41,40 +47,58 @@ public class DataController {
     @GetMapping("/bsp/search")
     public PagedModel<LoadBspTickerDTO> getBspByDate(
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-        @RequestParam String ticker,
-        @PageableDefault(size = 1000) Pageable pageable){
+        @RequestParam(required = false) String ticker, // Makes the parameter optional in the URL
+        @PageableDefault(size = 1000) Pageable pageable) {
+
         Page<LoadBspTickerDTO> pages = null;
         log.info("Ticker = {}, date = {}", ticker, date);
-        if(null == ticker)
-            pages = stockService.getBspsByPriceDate(date, pageable);
-        else if(1 == ticker.length())
-            pages = stockService.getBspsByPriceDateAndTickerStartingWith(date, ticker, pageable);
-        else
-            pages = stockService.getBspsByPriceDateAndTicker(date, ticker, pageable);
+        Optional<String> tickerOpt = Optional.ofNullable(ticker).map(String::trim).filter(t -> !t.isEmpty());
 
+        if (tickerOpt.isEmpty()) {
+            pages = bspService.getBspsByPriceDate(date, pageable);
+        } else {
+            String tickerValue = tickerOpt.get();
+            if (tickerValue.length() == 1) {
+                pages = bspService.getBspsByPriceDateAndTickerStartingWith(date, tickerValue, pageable);
+            } else {
+                pages = bspService.getBspsByPriceDateAndTicker(date, tickerValue, pageable);
+            }
+        }
         return new PagedModel<>(pages);
+    }
+
+
+    @GetMapping("/bsp/tradingDates")
+    public List<LocalDate> getBspTradingDates(){
+        return bspService.getDistinctPriceDates();
+
     }
 
 
     @GetMapping("/dsp/search")
     public PagedModel<LoadDspTickerDTO> getDspByDate(
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-        @RequestParam String ticker,
+        @RequestParam(required = false)  String ticker,
         @PageableDefault(size = 1000) Pageable pageable){
-            Page<LoadDspTickerDTO> pages = null;
-        if(null == ticker)
-            pages = stockService.getDspsByPriceDate(date, pageable);
-        else
-            pages = stockService.getDspsByPriceDateAndTickerStartingWith(date, ticker, pageable);
+
+        Optional<String> tickerOpt = Optional.ofNullable(ticker).map(String::trim).filter(t -> !t.isEmpty());
+        Page<LoadDspTickerDTO> pages = null;
+        if(tickerOpt.isEmpty()){
+            pages = dspService.getDspsByPriceDate(date, pageable);
+        }else{
+            String tickerValue = tickerOpt.get();
+            pages = dspService.getDspsByPriceDateAndTickerStartingWith(date, tickerValue, pageable);
+        }
         return new PagedModel<>(pages);
     }
+
 
     @GetMapping("/bsp")
     public List<LoadBspTicker> getBspTicker(@RequestParam String ticker, @RequestParam Optional<String> fromDate) {
         Date date = null;
         if(fromDate.isPresent())
             date = Date.valueOf(fromDate.get());
-        return stockService.getBspTickers(ticker,date);
+        return bspService.getBspTickers(ticker,date);
     }
 
     @GetMapping("/dsp")
@@ -82,7 +106,7 @@ public class DataController {
         Date date = null;
         if(fromDate.isPresent())
             date = Date.valueOf(fromDate.get());
-        return stockService.getDspTickers(ticker,date);
+        return dspService.getDspTickers(ticker,date);
     }
 
 }

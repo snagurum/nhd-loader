@@ -1,4 +1,4 @@
-package com.nhd.service;
+package com.nhd.service.impl;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.nhd.models.JobStatus;
+import com.nhd.service.AuditService;
 import com.nhd.service.repo.JobStatusRepository;
 import com.nhd.util.JobName;
 
