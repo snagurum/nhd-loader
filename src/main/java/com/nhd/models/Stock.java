@@ -29,7 +29,5 @@ public class Stock {
 
     private boolean active;
 
-
-
 }
 

@@ -19,7 +19,7 @@ public class DateSplitter {
 
     public static List<DatePair> splitByYear(LocalDate start, LocalDate end) {
         if (start.isAfter(end)) {
-            throw new IllegalArgumentException("Start date cannot be after the end date.");
+            throw new IllegalArgumentException("Start date {"+ start+ " }cannot be after the end date{" + end +"}.");
         }
 
         List<DatePair> pairs = new ArrayList<>();

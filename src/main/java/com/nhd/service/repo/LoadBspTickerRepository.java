@@ -17,9 +17,9 @@ public interface LoadBspTickerRepository extends JpaRepository<LoadBspTicker, Lo
 
     @Query(value = "select s.ticker as ticker, " +
         "coalesce(max(to_date(l.price_date, 'DD-Mon-YYYY')) + interval '1 day', s.date_of_listing) as latestDate " +
-        "from stock s " +
-        "left join load_bsp_ticker l on s.ticker = l.ticker " +
-        "where s.active = true " +
+        "from lt.stocks s " +
+        "left join lt.load_bsp_ticker l on s.ticker = l.ticker " +
+        "where s.date_of_listing < current_date and s.active = true " +
         "group by s.ticker, s.date_of_listing " +
         "having coalesce(max(to_date(l.price_date, 'DD-Mon-YYYY')), s.date_of_listing) " +
         "not in (current_date, current_date - interval '1 day')",
@@ -40,6 +40,5 @@ public interface LoadBspTickerRepository extends JpaRepository<LoadBspTicker, Lo
     Page<LoadBspTicker> findByPriceDateAndTicker(String date, String ticker, Pageable pageable);
 
     Page<LoadBspTicker> findByPriceDateAndTickerStartingWith(String date, String ticker, Pageable pageable);
-
 }
 
