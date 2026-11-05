@@ -24,8 +24,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @AllArgsConstructor
@@ -46,24 +48,27 @@ public class DataController {
 
     @GetMapping("/bsp/search")
     public PagedModel<LoadBspTickerDTO> getBspByDate(
-        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-        @RequestParam(required = false) String ticker, // Makes the parameter optional in the URL
-        @PageableDefault(size = 1000) Pageable pageable) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) List<String> tickers,
+            @PageableDefault(size = 1000) Pageable pageable) {
 
-        Page<LoadBspTickerDTO> pages = null;
-        log.info("Ticker = {}, date = {}", ticker, date);
-        Optional<String> tickerOpt = Optional.ofNullable(ticker).map(String::trim).filter(t -> !t.isEmpty());
+        log.info("Tickers = {}, date = {}", tickers, date);
+        List<String> cleanTickers = tickers == null ? Collections.emptyList() :
+                tickers.stream()
+                    .filter(t -> t != null && !t.trim().isEmpty())
+                    .map(String::trim)
+                    .collect(Collectors.toList());
+        Page<LoadBspTickerDTO> pages;
 
-        if (tickerOpt.isEmpty()) {
+        if (cleanTickers.isEmpty()) {
             pages = bspService.getBspsByPriceDate(date, pageable);
+        } else if (cleanTickers.size() == 1 && cleanTickers.get(0).length() == 1) {
+            String tickerValue = cleanTickers.get(0);
+            pages = bspService.getBspsByPriceDateAndTickerStartingWith(date, tickerValue, pageable);
         } else {
-            String tickerValue = tickerOpt.get();
-            if (tickerValue.length() == 1) {
-                pages = bspService.getBspsByPriceDateAndTickerStartingWith(date, tickerValue, pageable);
-            } else {
-                pages = bspService.getBspsByPriceDateAndTicker(date, tickerValue, pageable);
-            }
+            pages = bspService.getBspsByPriceDateAndTickerIn(date, cleanTickers, pageable);
         }
+
         return new PagedModel<>(pages);
     }
 

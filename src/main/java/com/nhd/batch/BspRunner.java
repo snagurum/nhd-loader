@@ -47,7 +47,7 @@ public class BspRunner {
     private static final Logger log = LoggerFactory.getLogger(BspRunner.class);
 
     private static final Bot BSP_BOT;
-    private static Integer STOCKS_PER_RUN = 20;
+    private static Integer STOCKS_PER_RUN = 50;
 
     static {        
         Yaml yaml = new Yaml(new Constructor(Bot.class, new LoaderOptions()));
@@ -64,8 +64,13 @@ public class BspRunner {
 
     @Scheduled(cron="#{${loader.bsp_ticker.scheduler.cron}}")
     public void runJob(){
+        runJob0(STOCKS_PER_RUN);
+    }
 
-        List<StockDateProjection> remainingStockDateProjections = bspService.getBspLoadPendingStockDatesWithLimit(STOCKS_PER_RUN);
+    public void runJob0(Integer paramStocksPerRun){
+        Integer stocksPerRun = paramStocksPerRun;
+        if(stocksPerRun == null ) stocksPerRun = STOCKS_PER_RUN;
+        List<StockDateProjection> remainingStockDateProjections = bspService.getBspLoadPendingStockDatesWithLimit(stocksPerRun);
         if (remainingStockDateProjections.isEmpty()){
             log.info("BSP: No tickers available stopping...");
             return;
@@ -86,6 +91,7 @@ public class BspRunner {
                 persistData(loadBspTickers);
                 processedTickers.add(item.getTicker());
                 auditService.endJobWithSuccessFailureCount(bspUnit,loadBspTickers.size(),0);
+                log.info("bsp ticker loaded for ticker = {}, count = {}, ",item.getTicker(),loadBspTickers.size());
 
             } catch (PageLoadException | IOException | InterruptedException  e) {
                 log.error(null, e);

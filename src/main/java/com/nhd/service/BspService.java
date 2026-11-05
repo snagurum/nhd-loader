@@ -25,6 +25,8 @@ public interface BspService {
 
     public Page<LoadBspTickerDTO> getBspsByPriceDateAndTicker(LocalDate date, String ticker, Pageable pageable);
 
+    public Page<LoadBspTickerDTO> getBspsByPriceDateAndTickerIn(LocalDate date, List<String> tickers, Pageable pageable);
+
     public Page<LoadBspTickerDTO> getBspsByPriceDateAndTickerStartingWith(LocalDate date, String ticker, Pageable pageable);
 
 }

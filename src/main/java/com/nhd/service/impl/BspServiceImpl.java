@@ -70,6 +70,13 @@ public class BspServiceImpl implements BspService{
             .map(this::convertToDTO);
     }
 
+    public Page<LoadBspTickerDTO> getBspsByPriceDateAndTickerIn(LocalDate date, List<String> tickers, Pageable pageable) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
+        String formattedDate = date.format(formatter);
+        return loadBspTickersRepo.findByPriceDateAndTickerIn(formattedDate, tickers, pageable)
+            .map(this::convertToDTO);
+    }
+
     public Page<LoadBspTickerDTO> getBspsByPriceDateAndTickerStartingWith(LocalDate date, String ticker, Pageable pageable) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
         String formattedDate = date.format(formatter);

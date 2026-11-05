@@ -84,8 +84,10 @@ public class JobController {
 	}
 
 	@GetMapping("/runJob/bspTicker")
-	public void runBspTickerJob(){
-		bspTickerRunner.runJob();
+	public void runBspTickerJob( @RequestParam Optional<Integer> stocksPerRun){
+		if(stocksPerRun.isPresent())
+			bspTickerRunner.runJob0(stocksPerRun.get());
+		else bspTickerRunner.runJob();
 	}
 
 	@GetMapping("/runJob/holiday")
@@ -117,10 +119,12 @@ public class JobController {
 	@GetMapping("/test/bsp")
 	public String bulkTest(@RequestParam Optional<String> ticker, @RequestParam Optional<String> dol, @RequestParam Optional<String> series) throws PageLoadException, IOException, InterruptedException {
 		ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
+		String tickerName = ticker.orElse("5PAISA");
+		String fromDate = dol.orElse("2010-11-23");
 
 		Map<String, Object> data = new HashMap<>();
-		data.put("ticker", "5PAISA");
-		data.put("latestDate", LocalDate.parse("2017-11-16"));
+		data.put("ticker", tickerName);
+		data.put("latestDate", LocalDate.parse(fromDate));
 
 		StockDateProjection mockProjection = factory.createProjection(StockDateProjection.class, data);
 
