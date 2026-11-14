@@ -20,6 +20,7 @@ public interface LoadBspTickerRepository extends JpaRepository<LoadBspTicker, Lo
         "from lt.stocks s " +
         "left join lt.load_bsp_ticker l on s.ticker = l.ticker " +
         "where s.date_of_listing < current_date and s.active = true " +
+        "and (s.bsp_loaded_date is null or s.bsp_loaded_date < current_date) " +
         "group by s.ticker, s.date_of_listing " +
         "having coalesce(max(to_date(l.price_date, 'DD-Mon-YYYY')), s.date_of_listing) " +
         "not in (current_date, current_date - interval '1 day')",

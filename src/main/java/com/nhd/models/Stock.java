@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Table;
 import java.sql.Date;
+import java.time.LocalDate;
 
 @Data
 @Entity
@@ -26,6 +27,9 @@ public class Stock {
     private Date dateOfListing;
 
     private boolean historyLoaded;
+
+    /** Date on which BSP history was last requested for this ticker. */
+    private LocalDate bspLoadedDate;
 
     private boolean active;
 

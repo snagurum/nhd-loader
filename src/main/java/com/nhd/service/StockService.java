@@ -19,6 +19,8 @@ public interface StockService{
 
         Stock saveStock(Stock ticker);
 
+        void markBspLoadAttempt(String ticker, LocalDate attemptDate);
+
         void saveAllLoadTickers(List<LoadTicker> tickers);
 
         public boolean isTodayAHoliday();

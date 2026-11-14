@@ -104,6 +104,7 @@ public class BspRunner {
                 List<LoadBspTicker> loadBspTickers = buildObjects(bot);
                 // item.setHistoryLoaded(true);
                 persistData(loadBspTickers);
+                stockService.markBspLoadAttempt(item.getTicker(), LocalDate.now());
                 processedTickers.add(item.getTicker());
                 auditService.endJobWithSuccessFailureCount(bspUnit,loadBspTickers.size(),0);
                 log.info("bsp ticker loaded for ticker = {}, count = {}, ",item.getTicker(),loadBspTickers.size());

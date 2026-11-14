@@ -52,6 +52,10 @@ public class StockServiceImpl implements StockService {
         return stockRepo.save(stock);
         }
 
+    public void markBspLoadAttempt(String ticker, LocalDate attemptDate){
+        stockRepo.updateBspLoadedDate(ticker, attemptDate);
+    }
+
     public void saveAllLoadTickers(List<LoadTicker> tickers){
 
         log.info("truncating load_tickers table");
