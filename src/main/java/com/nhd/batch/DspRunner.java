@@ -3,6 +3,7 @@ package com.nhd.batch;
 import com.nhd.models.JobStatus;
 import com.nhd.models.LoadDspTicker;
 import com.nhd.models.Stock;
+import com.nhd.config.LoaderCrawlerProperties;
 import com.nhd.service.AuditService;
 import com.nhd.service.DspService;
 import com.nhd.service.StockService;
@@ -51,9 +52,11 @@ public class DspRunner {
     private DspService dspService;
 
     private AuditService auditService;
+
+    private LoaderCrawlerProperties crawlerProperties;
     
     
-    @Scheduled(cron="#{${loader.dsp_ticker.scheduler.cron}}")
+    @Scheduled(cron="${loader.dsp_ticker.scheduler.cron}")
     public void runJob(){
         if( this.stockService.isTodayAHoliday()){
             log.info("Today {} is a Holday ", this.stockService.findByHolidayDate(LocalDate.now()));
@@ -79,8 +82,8 @@ public class DspRunner {
                 processed.put(stock.getTicker(), loadDspTickers.get(0));
                 log.info("DSP ticker={} took {} ms (#{})",stock.getTicker(),(System.currentTimeMillis() - tickerStart),++count);
 
-                BotUtil.sleepQuietly(1000);
-                if (count % 100 == 0) {
+                BotUtil.sleepQuietly(crawlerProperties.getDspRequestDelayMillis());
+                if (count % crawlerProperties.getDspProgressLogInterval() == 0) {
                     long elapsed = System.currentTimeMillis() - jobStart;
                     long avg = elapsed / count;
                     log.info("DSP progress: {} tickers, elapsed={} sec, avg={} ms/ticker", count, (elapsed / 1000), avg);
@@ -101,7 +104,7 @@ public class DspRunner {
     private Bot runJob0(Stock stock) throws PageLoadException, IOException, InterruptedException{
                 Bot dspBot = SerializationUtils.clone(DSP_BOT);
                 Map<String, String> gParam = new HashMap<>(Map.of("$gParam1$", stock.getTicker()));
-                BotUtil botUtil = new BotUtil(dspBot, gParam);
+                BotUtil botUtil = new BotUtil(dspBot, gParam, crawlerProperties);
                 botUtil.process();
                 return dspBot;
     }

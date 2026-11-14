@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedModel;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,9 +49,8 @@ public class DataController {
     public PagedModel<LoadBspTickerDTO> getBspByDate(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false) List<String> tickers,
-            @PageableDefault(size = 1000) Pageable pageable) {
+            Pageable pageable) {
 
-        log.info("Tickers = {}, date = {}", tickers, date);
         List<String> cleanTickers = tickers == null ? Collections.emptyList() :
                 tickers.stream()
                     .filter(t -> t != null && !t.trim().isEmpty())
@@ -84,7 +82,7 @@ public class DataController {
     public PagedModel<LoadDspTickerDTO> getDspByDate(
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
         @RequestParam(required = false)  String ticker,
-        @PageableDefault(size = 1000) Pageable pageable){
+        Pageable pageable){
 
         Optional<String> tickerOpt = Optional.ofNullable(ticker).map(String::trim).filter(t -> !t.isEmpty());
         Page<LoadDspTickerDTO> pages = null;

@@ -4,6 +4,7 @@ import com.nhd.batch.BspRunner;
 import com.nhd.batch.DspRunner;
 import com.nhd.batch.HolidayRunner;
 import com.nhd.batch.TickerRunner;
+import com.nhd.config.LoaderCrawlerProperties;
 import com.nhd.models.JobStatus;
 import com.nhd.models.Stock;
 import com.nhd.service.AuditService;
@@ -50,6 +51,8 @@ public class JobController {
 	HolidayRunner holidayRunner;
 
 	AuditService auditService;
+
+	LoaderCrawlerProperties crawlerProperties;
 
 	@GetMapping("/tjs")
 	public List<JobStatus> index() {
@@ -110,7 +113,7 @@ public class JobController {
 
 		Bot dspBot = SerializationUtils.clone(DSP_BOT);
 		Map<String, String> gParam = new HashMap<>(Map.of("$gParam1$", stock.getTicker()));
-		BotUtil botUtil = new BotUtil(dspBot, gParam);
+		BotUtil botUtil = new BotUtil(dspBot, gParam, crawlerProperties);
 		botUtil.process(); 
 
 		return dspBot.getPages().get(2).getResponseData();

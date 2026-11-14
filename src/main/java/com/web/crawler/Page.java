@@ -19,7 +19,7 @@ public class Page  implements Serializable{
     private Map<String,String> headers;
     private String validationString;
     private Integer validationStatusCode;
-    private Integer timeout = 10;
+    private Integer timeout;
     private String referer;
     private Map<String,String> params;
     private List<PageParam> pageParams;

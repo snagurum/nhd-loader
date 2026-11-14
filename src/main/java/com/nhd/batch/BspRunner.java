@@ -4,6 +4,7 @@ package com.nhd.batch;
 import com.nhd.models.JobStatus;
 import com.nhd.models.LoadBspTicker;
 import com.nhd.models.Stock;
+import com.nhd.config.LoaderCrawlerProperties;
 import com.nhd.service.AuditService;
 import com.nhd.service.BspService;
 import com.nhd.service.StockDateProjection;
@@ -29,8 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,13 +41,11 @@ import java.util.Map;
 
 
 @Component
-@AllArgsConstructor
 public class BspRunner {
 
     private static final Logger log = LoggerFactory.getLogger(BspRunner.class);
 
     private static final Bot BSP_BOT;
-    private static Integer STOCKS_PER_RUN = 50;
 
     static {        
         Yaml yaml = new Yaml(new Constructor(Bot.class, new LoaderOptions()));
@@ -56,20 +54,37 @@ public class BspRunner {
         log.info(BSP_BOT.toString());       
     }
 
-    private BspService bspService ;
+    private final BspService bspService;
 
-    private StockService stockService ;
+    private final StockService stockService;
 
-    private AuditService auditService ;
+    private final AuditService auditService;
 
-    @Scheduled(cron="#{${loader.bsp_ticker.scheduler.cron}}")
+    private final Integer stocksPerRun;
+    private final LoaderCrawlerProperties crawlerProperties;
+
+    public BspRunner(
+        BspService bspService,
+        StockService stockService,
+        AuditService auditService,
+        @Value("${loader.bsp_ticker.stocks_per_run}") Integer stocksPerRun,
+        LoaderCrawlerProperties crawlerProperties
+    ) {
+        this.bspService = bspService;
+        this.stockService = stockService;
+        this.auditService = auditService;
+        this.stocksPerRun = stocksPerRun;
+        this.crawlerProperties = crawlerProperties;
+    }
+
+    @Scheduled(cron="${loader.bsp_ticker.scheduler.cron}")
     public void runJob(){
-        runJob0(STOCKS_PER_RUN);
+        runJob0(stocksPerRun);
     }
 
     public void runJob0(Integer paramStocksPerRun){
         Integer stocksPerRun = paramStocksPerRun;
-        if(stocksPerRun == null ) stocksPerRun = STOCKS_PER_RUN;
+        if(stocksPerRun == null ) stocksPerRun = this.stocksPerRun;
         List<StockDateProjection> remainingStockDateProjections = bspService.getBspLoadPendingStockDatesWithLimit(stocksPerRun);
         if (remainingStockDateProjections.isEmpty()){
             log.info("BSP: No tickers available stopping...");
@@ -120,7 +135,7 @@ public class BspRunner {
     public Bot runJob0(StockDateProjection stockDateProjection) throws PageLoadException, IOException, InterruptedException{
         Bot bspBot = SerializationUtils.clone(BSP_BOT);
         Map<String,String> gParam = Map.of("$gParam1$",stockDateProjection.getTicker());
-        BotUtil botUtil = new BotUtil(bspBot, gParam);
+        BotUtil botUtil = new BotUtil(bspBot, gParam, crawlerProperties);
         Page templatePage = bspBot.getPages().remove(bspBot.getPages().size()-1);
 
         LocalDate endDate = LocalDate.now();

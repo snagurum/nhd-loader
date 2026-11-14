@@ -2,6 +2,7 @@ package com.nhd.batch;
 
 import com.nhd.models.Holiday;
 import com.nhd.models.JobStatus;
+import com.nhd.config.LoaderCrawlerProperties;
 import com.nhd.service.AuditService;
 import com.nhd.service.StockService;
 import com.nhd.util.JobName;
@@ -53,8 +54,10 @@ public class HolidayRunner {
     private StockService stockService ;
 
     private ObjectMapper mapper;;
+
+    private LoaderCrawlerProperties crawlerProperties;
     
-    @Scheduled(cron="#{${loader.holiday.scheduler.cron}}")
+    @Scheduled(cron="${loader.holiday.scheduler.cron}")
     public void runJob(){
 
         JobStatus audit = auditService.startJob(JobName.HOLIDAY);
@@ -91,7 +94,7 @@ public class HolidayRunner {
     private Bot runJob0() throws PageLoadException, IOException, InterruptedException{
         Bot holidayBot = SerializationUtils.clone(HOLIDAY_BOT);
         Map<String, String> gParam = new HashMap<>();
-        BotUtil botUtil = new BotUtil(holidayBot, gParam);
+        BotUtil botUtil = new BotUtil(holidayBot, gParam, crawlerProperties);
         botUtil.process();
         return holidayBot;
     }

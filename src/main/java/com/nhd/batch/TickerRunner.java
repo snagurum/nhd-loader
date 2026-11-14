@@ -6,6 +6,7 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.nhd.models.JobStatus;
 import com.nhd.models.LoadTicker;
+import com.nhd.config.LoaderCrawlerProperties;
 import com.nhd.service.AuditService;
 import com.nhd.service.StockService;
 import com.nhd.util.JobName;
@@ -52,8 +53,10 @@ public class TickerRunner {
 
     private AuditService auditService ;
 
+    private LoaderCrawlerProperties crawlerProperties;
 
-    @Scheduled( cron = "#{${loader.ticker.scheduler.cron}}")
+
+    @Scheduled( cron = "${loader.ticker.scheduler.cron}")
     public void runJob(){
         if( this.stockService.isTodayAHoliday()){
             log.info("Today {} is a Holday ", this.stockService.findByHolidayDate(LocalDate.now()));
@@ -78,7 +81,7 @@ public class TickerRunner {
 
     public Bot runJob0() throws PageLoadException, IOException, InterruptedException{
         Bot tickerBot = SerializationUtils.clone(TICKER_BOT);
-        BotUtil botUtil = new BotUtil(tickerBot);
+        BotUtil botUtil = new BotUtil(tickerBot, crawlerProperties);
         botUtil.process();
         return tickerBot;
     }

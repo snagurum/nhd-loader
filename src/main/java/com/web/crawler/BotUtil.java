@@ -1,5 +1,7 @@
 package com.web.crawler;
 
+import com.nhd.config.LoaderCrawlerProperties;
+
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.util.Map;
@@ -8,24 +10,36 @@ public class BotUtil {
 
     private Bot bot;
     Map<String,String> gParam;
+    private LoaderCrawlerProperties crawlerProperties;
 
-    public BotUtil(Bot bot){
-        this(bot,null);
+    public BotUtil(Bot bot, LoaderCrawlerProperties crawlerProperties){
+        this(bot, null, crawlerProperties);
     }
 
-    public BotUtil(Bot bot, Map<String,String> gParam){
+    public BotUtil(Bot bot, Map<String,String> gParam, LoaderCrawlerProperties crawlerProperties){
         this.bot = bot;
-        this.gParam = gParam ;
+        this.gParam = gParam;
+        this.crawlerProperties = crawlerProperties;
     }
     
     public void process() throws PageLoadException, IOException, InterruptedException{
-        HttpClient client = HttpUtil.getHttpClient();
+        HttpClient client = HttpUtil.getHttpClient(crawlerProperties.getConnectTimeoutSeconds());
 
         for( Page eachPage: this.bot.getPages()){
-            HttpUtil httpUtil = new HttpUtil(eachPage,gParam);
+            HttpUtil httpUtil = new HttpUtil(eachPage, gParam, getRequestTimeoutSeconds(eachPage));
             httpUtil.process(client);
-            BotUtil.sleepQuietly(500);
+            BotUtil.sleepQuietly(crawlerProperties.getRequestDelayMillis());
         }
+    }
+
+    private int getRequestTimeoutSeconds(Page page) {
+        if (page.getTimeout() != null) {
+            return page.getTimeout();
+        }
+        if (bot.getTimeout() != null) {
+            return bot.getTimeout();
+        }
+        return crawlerProperties.getDefaultRequestTimeoutSeconds();
     }
 
     public static void sleepQuietly(int i) {

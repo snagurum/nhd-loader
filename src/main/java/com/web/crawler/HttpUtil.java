@@ -30,29 +30,33 @@ public class HttpUtil {
 
 	private Page page;
 	private Map<String, String> globalParams;
+	private int requestTimeoutSeconds;
 
-	public static HttpClient getHttpClient(){
+	public static HttpClient getHttpClient(int connectTimeoutSeconds){
 		CookieManager cookieManager = new CookieManager();
 		cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
 
 		HttpClient client = HttpClient.newBuilder()
 			.cookieHandler(cookieManager)
-			.connectTimeout(Duration.ofSeconds(10))
+			.connectTimeout(Duration.ofSeconds(connectTimeoutSeconds))
 			.build();
 			return client;
 	}
 	
 	
-	public HttpUtil(Page page, Map<String,String> gParams){
+	public HttpUtil(Page page, Map<String,String> gParams, int requestTimeoutSeconds){
 		this.page = page;
 		this.globalParams = gParams;
+		this.requestTimeoutSeconds = requestTimeoutSeconds;
 	}
 	
 	
 	public void process(HttpClient client) throws IOException, PageLoadException, InterruptedException{
 
 		String url = addParam();
-		HttpRequest.Builder builder = HttpRequest.newBuilder().uri(URI.create(url));
+		HttpRequest.Builder builder = HttpRequest.newBuilder()
+			.uri(URI.create(url))
+			.timeout(Duration.ofSeconds(requestTimeoutSeconds));
 		addHeaders(builder);
 		addMethod(builder);
 		HttpRequest httpRequest = builder.build();
