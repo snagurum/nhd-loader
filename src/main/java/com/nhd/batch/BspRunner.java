@@ -96,7 +96,9 @@ public class BspRunner {
 
         log.info( "BSP Loader  Start: Total = {},  Retrieved = {}", remainingStockDateProjections.size(), processedTickers.size());
 
-        remainingStockDateProjections.forEach(item -> {
+        int count = 0;
+        boolean jobFailure = false;
+        for (StockDateProjection item : remainingStockDateProjections) {
             JobStatus bspUnit = auditService.startJobWithComment(JobName.BSP_TICKER_UNIT, item.getTicker());
             try{
 
@@ -107,16 +109,28 @@ public class BspRunner {
                 stockService.markBspLoadAttempt(item.getTicker(), LocalDate.now());
                 processedTickers.add(item.getTicker());
                 auditService.endJobWithSuccessFailureCount(bspUnit,loadBspTickers.size(),0);
-                log.info("bsp ticker loaded for ticker = {}, count = {}, ",item.getTicker(),loadBspTickers.size());
+                log.info("bsp ticker loaded for ticker = ( #{}) {}, count = {}, ",(++count),item.getTicker(),loadBspTickers.size());
 
-            } catch (PageLoadException | IOException | InterruptedException  e) {
-                log.error(null, e);
+            } catch(PageLoadException e){
+                log.error(e.getMessage(), e);
                 auditService.failJobWithSuccessFailureCount(bspUnit, 0, 1);
+                jobFailure = true;
+                break;
+            } catch ( IOException | InterruptedException  e) {
+                log.error(e.getMessage(), e);
+                auditService.failJobWithSuccessFailureCount(bspUnit, 0, 1);
+                if (e instanceof InterruptedException) {
+                    Thread.currentThread().interrupt();
+                }
+                continue;
             }
-        });
-    
+        }
+        
         log.info( "BSP Loader End: Total = {},  Retrieved = {}", remainingStockDateProjections.size(), processedTickers.size());
-        auditService.endJobWithSuccessFailureCount(audit,processedTickers.size(),(remainingStockDateProjections.size()-processedTickers.size()));
+        if(jobFailure)
+            auditService.failJobWithSuccessFailureCount(audit,processedTickers.size(),(remainingStockDateProjections.size()-processedTickers.size()));
+        else
+            auditService.endJobWithSuccessFailureCount(audit,processedTickers.size(),(remainingStockDateProjections.size()-processedTickers.size()));
     }
 
     public List<LoadBspTicker> buildObjects(Bot bot) throws IOException {
@@ -143,6 +157,7 @@ public class BspRunner {
         List<DatePair> datePairs = DateSplitter.splitByYear(stockDateProjection.getLatestDate(), endDate);
         for(DatePair datePair: datePairs){
             Page page = SerializationUtils.clone(templatePage);
+            log.trace("Page info : {}", page);
             page.setUrl(page.getUrl().replace("$startDate1$",DateUtil.getDateStr_ddMMyyyy(datePair.startDate())));
             page.setUrl(page.getUrl().replace("$endDate1$",DateUtil.getDateStr_ddMMyyyy(datePair.endDate())));
             bspBot.getPages().add(page);

@@ -4,7 +4,7 @@
 
 
 
-create table lt.LOAD_TICKERS(
+create table IF NOT EXISTS lt.LOAD_TICKERS(
     id                integer primary key generated always as identity,
     symbol            varchar ,
     company           varchar,
@@ -17,7 +17,7 @@ create table lt.LOAD_TICKERS(
     is_new            boolean default false
 );
 
-create table lt.STOCKS(
+create table IF NOT EXISTS lt.STOCKS(
     id                integer primary key generated always as identity,
     ticker           varchar(50),        -- SYMBOL
     name             varchar(200),       -- NAME OF COMPANY

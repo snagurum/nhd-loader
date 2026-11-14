@@ -1,4 +1,4 @@
-create table lt.job_status(
+create table IF NOT EXISTS lt.job_status(
     id                integer primary key generated always as identity,
     type              varchar ,
     name              varchar,

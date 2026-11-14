@@ -3,7 +3,7 @@ description: holidays tracker
 timeout: 10
 pages:
   - pageName: HolidaysJson
-    url: https://www.nseindia.com/api/holiday-master?type=trading
+    url: https://www.nseindia.in/api/holiday-master?type=trading
     validationStatusCode: 200
     persistantData: true
     

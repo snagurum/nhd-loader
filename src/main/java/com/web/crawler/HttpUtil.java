@@ -12,6 +12,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -19,6 +22,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class HttpUtil {
 
+    private static final Logger log = LoggerFactory.getLogger(HttpUtil.class);
 
     private static Map<String, String> DEFAULT_HEADERS = Map.of(
 		"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -39,6 +43,7 @@ public class HttpUtil {
 		HttpClient client = HttpClient.newBuilder()
 			.cookieHandler(cookieManager)
 			.connectTimeout(Duration.ofSeconds(connectTimeoutSeconds))
+			.followRedirects(HttpClient.Redirect.NORMAL)
 			.build();
 			return client;
 	}
@@ -65,7 +70,7 @@ public class HttpUtil {
 		this.page.setResponseData(httpResponse.body());
 		this.page.setResponseStatusCode(httpResponse.statusCode());
 
-		doValidation();
+		doValidation(httpResponse, url);
 		doLoadParams();
 		return ;
 	}
@@ -97,13 +102,29 @@ public class HttpUtil {
 
 	}
 
-	private void doValidation(){
+	private void doValidation(HttpResponse<String> httpResponse, String requestedUrl){
+		log.trace("Validating NSE page={}, requestedUrl={}, finalUrl={}, expectedStatus={}, receivedStatus={}",
+			this.page.getPageName(),
+			requestedUrl,
+			httpResponse.uri(),
+			this.page.getValidationStatusCode(),
+			this.page.getResponseStatusCode());
+
 		if(null!=this.page.getValidationString() && this.page.getReferer().indexOf(this.page.getValidationString())>-1){
+			log.warn("NSE request failed VALIDATION STRING page={}, validation String : {}, response String : {}",
+				this.page.getPageName(),
+				page.getValidationString(),
+				httpResponse.body());
 			throw new PageLoadException("PageLoad String validation Failure");
 		}
 
 		if(null != this.page.getValidationStatusCode() && !this.page.getValidationStatusCode().equals(this.page.getResponseStatusCode()) ){
-			throw new PageLoadException("PageLoad statusCode validation Failure");
+			log.warn("NSE request failed STATUS CODE page={}, validating status code : {}, response status code : {}",
+				this.page.getPageName(),
+				page.getResponseStatusCode(),
+				httpResponse.statusCode());
+			throw new PageLoadException("PageLoad statusCode validation Failure: expected " +
+				this.page.getValidationStatusCode() + ", received " + this.page.getResponseStatusCode());
 		}
 	}
 

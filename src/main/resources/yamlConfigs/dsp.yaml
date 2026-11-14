@@ -3,20 +3,20 @@ description: daily stock prices
 timeout: 10
 pages:
   - pageName: landingPage
-    url: https://www.nseindia.com
-    referer: https://www.nseindia.com
+    url: https://www.nseindia.in
+    referer: https://www.nseindia.in
     validationStatusCode: 403
   - pageName: SearchPage
-    url: https://www.nseindia.com/api/NextApi/globalSearch/equity?symbol=$gParam1$
-    referer: https://www.nseindia.com
+    url: https://www.nseindia.in/api/NextApi/globalSearch/equity?symbol=$gParam1$
+    referer: https://www.nseindia.in
     pageParams:
      - name: $gParam2$
        startString: "\"series\":\""
        endString: "\""
     validationStatusCode: 200
   - pageName: DetailsPage
-    url: https://www.nseindia.com/api/NextApi/apiClient/GetQuoteApi?functionName=getSymbolData&marketType=N&series=$gParam2$&symbol=$gParam1$
-    referer: https://www.nseindia.com
+    url: https://www.nseindia.in/api/NextApi/apiClient/GetQuoteApi?functionName=getSymbolData&marketType=N&series=$gParam2$&symbol=$gParam1$
+    referer: https://www.nseindia.in
     validationStatusCode: 200
     persistantData: true
     

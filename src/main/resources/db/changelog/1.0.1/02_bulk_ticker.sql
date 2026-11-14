@@ -1,4 +1,4 @@
-create table lt.load_bulk_tickers(
+create table IF NOT EXISTS lt.load_bulk_tickers(
     id               integer primary key generated always as identity,
     ticker           varchar,
     price_date       varchar,
@@ -17,4 +17,4 @@ create table lt.load_bulk_tickers(
     ltp               varchar
 );
 
-alter table lt.stocks add column history_loaded boolean default false;
+alter table lt.stocks add column  IF NOT EXISTS history_loaded boolean default false;

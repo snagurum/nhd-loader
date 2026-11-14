@@ -2,11 +2,16 @@ package com.web.crawler;
 
 import com.nhd.config.LoaderCrawlerProperties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.util.Map;
 
 public class BotUtil {
+
+    private static final Logger log = LoggerFactory.getLogger(BotUtil.class);
 
     private Bot bot;
     Map<String,String> gParam;

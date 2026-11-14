@@ -1,4 +1,4 @@
-create table lt.load_bsp_ticker(
+create table IF NOT EXISTS lt.load_bsp_ticker(
     id               integer primary key generated always as identity,
     ticker           varchar,
     price_date       varchar,
